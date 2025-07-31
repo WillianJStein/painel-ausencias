@@ -2,7 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
 
     // URL da sua API gerada pelo Sheet.best
-    const SHEET_URL = 'https://api.sheetbest.com/sheets/ed83873b-c4dc-45e6-ac5e-b1108852dceb';
+    const SHEET_URL = 'https://sheet.best/api/sheets/ed83873b-c4dc-45e6-ac5e-b1108852dceb';
 
     // Função principal para buscar e renderizar os dados
     async function carregarDados() {
