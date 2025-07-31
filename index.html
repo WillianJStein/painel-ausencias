@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Ausências</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <header>
+        <div class="logo">
+            <h1>PALHOÇA <span>PREFEITURA</span></h1>
+        </div>
+        <h2>Controle de Ausências - Prefeitura de Palhoça</h2>
+        <button class="register-button">Registrar Ausência</button>
+    </header>
+
+    <main class="container">
+        <div class="left-column">
+            <section class="summary-section">
+                <h3>Resumo de Ausências</h3>
+                <div class="summary-cards">
+                    <div class="summary-card present">
+                        <span id="count-presentes">0</span>
+                        <p>Presentes</p>
+                    </div>
+                    <div class="summary-card absent">
+                        <span id="count-ausentes">0</span>
+                        <p>Ausentes</p>
+                    </div>
+                    <div class="summary-card vacation">
+                        <span id="count-ferias">0</span>
+                        <p>Em Férias</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="calendar-section">
+                <h3>Calendário de Ausências</h3>
+                <div class="calendar">
+                    <p>Julho 2025</p>
+                    <img src="https://i.imgur.com/gA3n5W5.png" alt="Calendário de exemplo" style="width: 100%;"/>
+                </div>
+            </section>
+        </div>
+
+        <div class="right-column">
+            <section class="status-section">
+                <h3>Status por Grupo e Turno</h3>
+                <div id="status-grid" class="status-grid">
+                    </div>
+            </section>
+        </div>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>

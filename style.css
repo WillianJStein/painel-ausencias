@@ -1,0 +1,150 @@
+:root {
+    --primary-color: #0056b3;
+    --secondary-color: #007bff;
+    --light-gray: #f8f9fa;
+    --border-color: #dee2e6;
+    --text-color: #333;
+    --presente-color: #28a745;
+    --ausente-color: #dc3545;
+    --ferias-color: #ffc107;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    background-color: var(--light-gray);
+    color: var(--text-color);
+    margin: 0;
+}
+
+.container {
+    display: flex;
+    padding: 20px;
+    gap: 20px;
+}
+
+header {
+    background-color: var(--primary-color);
+    color: white;
+    padding: 15px 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+header h1 {
+    margin: 0;
+    font-size: 24px;
+}
+header h1 span {
+    font-weight: 400;
+}
+header h2 {
+    margin: 0;
+    font-weight: 500;
+}
+
+.register-button {
+    background-color: var(--ferias-color);
+    color: var(--text-color);
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.left-column { flex: 1; }
+.right-column { flex: 3; }
+
+section {
+    background-color: white;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+h3 {
+    margin-top: 0;
+    border-bottom: 2px solid var(--light-gray);
+    padding-bottom: 10px;
+    margin-bottom: 20px;
+}
+
+/* Resumo */
+.summary-cards {
+    display: flex;
+    justify-content: space-around;
+    text-align: center;
+}
+.summary-card span {
+    font-size: 36px;
+    font-weight: bold;
+    display: block;
+}
+.summary-card p {
+    margin: 0;
+    font-weight: 500;
+}
+.summary-card.present span { color: var(--presente-color); }
+.summary-card.absent span { color: var(--ausente-color); }
+.summary-card.vacation span { color: var(--ferias-color); }
+
+
+/* Status por Grupo */
+.status-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.team-group {
+    border: 1px solid var(--border-color);
+    border-radius: 5px;
+    padding: 15px;
+}
+
+.team-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+.team-header h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.status-badge {
+    font-size: 12px;
+    padding: 3px 8px;
+    border-radius: 12px;
+    color: white;
+    font-weight: 500;
+}
+.status-badge.ok { background-color: var(--presente-color); }
+.status-badge.warning { background-color: var(--ferias-color); }
+
+.employee {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    align-items: center;
+}
+.employee-name {
+    font-weight: 500;
+}
+.employee-details {
+    font-size: 12px;
+    color: #6c757d;
+}
+
+.employee-status {
+    font-size: 14px;
+    font-weight: bold;
+}
+.status-presente { color: var(--presente-color); }
+.status-férias { color: var(--ferias-color); }
+.status-licença { color: var(--ausente-color); }
