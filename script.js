@@ -116,10 +116,11 @@ function renderizarCalendario(funcionarios, ausencias) {
     const calendarEl = document.getElementById('calendar');
 
     // Formata os dados de ausências para o formato que o FullCalendar entende
-    const eventos = ausencias.map(aus => {
+    // ADICIONAMOS O .filter() AQUI para ignorar linhas vazias da planilha
+    const eventos = ausencias.filter(aus => aus.data_inicio && aus.data_fim).map(aus => {
         const funcionario = funcionarios.find(f => f.id == aus.id_funcionario);
         const nomeFuncionario = funcionario ? funcionario.nome : 'Desconhecido';
-
+        
         // Corrige as datas para incluir o dia final completo
         const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
         const dataFinalCorrigida = new Date(+anoFim, mesFim - 1, +diaFim);
