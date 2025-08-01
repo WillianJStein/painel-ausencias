@@ -1,17 +1,22 @@
 // Aguarda o carregamento completo da página para rodar o script
 document.addEventListener('DOMContentLoaded', function() {
 
-    // URL da sua API gerada pelo Sheet.best
-    const SHEET_URL = 'https://sheet.best/api/sheets/03fb9dd1-3bd9-4c41-a5d5-dad1f5574eaf';
+    // URL da sua API gerada pelo Sheet.best (use exatamente como o site fornece)
+    const SHEET_URL = 'https://api.sheetbest.com/sheets/03fb9dd1-3bd9-4c41-a5d5-dad1f5574eaf';
 
     // Função principal para buscar e renderizar os dados
     async function carregarDados() {
         try {
-            // Busca dados de ambas as abas (Funcionarios e Ausencias)
+            // Busca dados de ambas as abas usando o parâmetro "?_tab=NomeDaAba"
             const [funcionarios, ausencias] = await Promise.all([
-                fetch(`${SHEET_URL}/tabs/Funcionarios`).then(res => res.json()),
-                fetch(`${SHEET_URL}/tabs/Ausencias`).then(res => res.json())
+                fetch(`${SHEET_URL}?_tab=Funcionarios`).then(res => res.json()),
+                fetch(`${SHEET_URL}?_tab=Ausencias`).then(res => res.json())
             ]);
+
+            // Se a busca falhar e retornar um objeto com 'error', lança um erro
+            if (funcionarios.error || ausencias.error) {
+                throw new Error('Uma das abas não foi encontrada. Verifique os nomes das abas na planilha.');
+            }
 
             const hoje = new Date();
             const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
@@ -20,7 +25,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         } catch (error) {
             console.error('Erro ao buscar dados da planilha:', error);
-            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique a URL da planilha e a conexão.</p>';
+            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique a URL e os nomes das abas na planilha.</p>';
         }
     }
 
@@ -29,9 +34,12 @@ document.addEventListener('DOMContentLoaded', function() {
         return funcionarios.map(func => {
             const ausenciaAtiva = ausencias.find(aus => {
                 if (aus.id_funcionario == func.id) {
-                    const inicio = new Date(aus.data_inicio.split('/').reverse().join('-'));
-                    const fim = new Date(aus.data_fim.split('/').reverse().join('-'));
-                    // Ajusta para incluir o dia todo
+                    // Converte a data dd/mm/yyyy para um objeto Date válido
+                    const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
+                    const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
+                    const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
+                    const fim = new Date(+anoFim, mesFim - 1, +diaFim);
+
                     fim.setHours(23, 59, 59, 999);
                     return hoje >= inicio && hoje <= fim;
                 }
@@ -51,7 +59,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const grid = document.getElementById('status-grid');
         grid.innerHTML = ''; // Limpa a área antes de desenhar
 
-        // Agrupa os funcionários por grupo e turno
         const grupos = funcionarios.reduce((acc, func) => {
             const key = `${func.grupo} ${func.turno}`;
             if (!acc[key]) {
@@ -61,7 +68,6 @@ document.addEventListener('DOMContentLoaded', function() {
             return acc;
         }, {});
 
-        // Cria o HTML para cada grupo
         for (const nomeGrupo in grupos) {
             const funcionariosDoGrupo = grupos[nomeGrupo];
             const temAusente = funcionariosDoGrupo.some(f => f.status_atual !== 'Presente');
@@ -77,7 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
             `;
 
             funcionariosDoGrupo.forEach(func => {
-                const statusClass = func.status_atual.toLowerCase().replace('é', 'e');
+                const statusClass = func.status_atual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
                 groupHTML += `
                     <div class="employee">
                         <div>
