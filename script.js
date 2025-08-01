@@ -1,7 +1,7 @@
 // Aguarda o carregamento completo da página para rodar o script
 document.addEventListener('DOMContentLoaded', function() {
 
-    // URL da sua API gerada pelo Sheet.best (use exatamente como o site fornece)
+    // URL da sua API gerada pelo Sheet.best (exatamente como o site fornece)
     const SHEET_URL = 'https://api.sheetbest.com/sheets/03fb9dd1-3bd9-4c41-a5d5-dad1f5574eaf';
 
     // Função principal para buscar e renderizar os dados
@@ -39,7 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
                     const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
                     const fim = new Date(+anoFim, mesFim - 1, +diaFim);
-
+                    
                     fim.setHours(23, 59, 59, 999);
                     return hoje >= inicio && hoje <= fim;
                 }
