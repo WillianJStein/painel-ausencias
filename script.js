@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
             const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
             renderizarPainel(dadosProcessados);
             atualizarResumo(dadosProcessados);
+			renderizarCalendario(funcionarios, ausencias);
 
         } catch (error) {
             console.error('Erro ao buscar dados da planilha:', error);
@@ -110,7 +111,40 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('count-ferias').textContent = ferias;
         document.getElementById('count-ausentes').textContent = outrasAusencias;
     }
+// Função para desenhar o calendário com os dados de ausências
+function renderizarCalendario(funcionarios, ausencias) {
+    const calendarEl = document.getElementById('calendar');
 
+    // Formata os dados de ausências para o formato que o FullCalendar entende
+    const eventos = ausencias.map(aus => {
+        const funcionario = funcionarios.find(f => f.id == aus.id_funcionario);
+        const nomeFuncionario = funcionario ? funcionario.nome : 'Desconhecido';
+
+        // Corrige as datas para incluir o dia final completo
+        const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
+        const dataFinalCorrigida = new Date(+anoFim, mesFim - 1, +diaFim);
+        dataFinalCorrigida.setDate(dataFinalCorrigida.getDate() + 1);
+
+        return {
+            title: `${aus.tipo_ausencia} - ${nomeFuncionario}`,
+            start: aus.data_inicio.split('/').reverse().join('-'), // Formato AAAA-MM-DD
+            end: dataFinalCorrigida.toISOString().split('T')[0], // Formato AAAA-MM-DD
+        };
+    });
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br', // Define o idioma para Português do Brasil
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        events: eventos,
+        eventColor: '#dc3545' // Cor dos eventos
+    });
+    calendar.render();
+}
     // Inicia o processo
     carregarDados();
 });
