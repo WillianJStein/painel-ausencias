@@ -22,9 +22,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Função principal para buscar e renderizar os dados
     async function carregarDados() {
         try {
-            const [funcionarios, ausencias] = await Promise.all([
+            const [funcionarios, ausencias, informacoes] = await Promise.all([
                 fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`)
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
 
             if (funcionarios.error || ausencias.error) {
@@ -38,6 +39,7 @@ document.addEventListener('DOMContentLoaded', function() {
             atualizarResumo(dadosProcessados);
             renderizarCalendario(funcionarios, ausencias);
             setupAbsenceModal(funcionarios);
+            renderizarInformacoes(informacoes);
 
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
@@ -224,7 +226,38 @@ function renderizarCalendario(funcionarios, ausencias) {
     });
     calendar.render();
 }
+// Função para desenhar o Quadro de Informações
+function renderizarInformacoes(informacoes) {
+    const board = document.getElementById('info-board');
+    board.innerHTML = ''; // Limpa o quadro
 
+    if (!informacoes || informacoes.length === 0) {
+        board.innerHTML = '<p>Nenhuma informação no momento.</p>';
+        return;
+    }
+
+    // Ordena para que os destaques apareçam primeiro
+    informacoes.sort((a, b) => (b.destaque === 'TRUE' ? 1 : -1));
+
+    informacoes.forEach(info => {
+        if (info.mensagem) { // Garante que não criamos cards para linhas vazias
+            const card = document.createElement('div');
+            card.className = 'info-card';
+            // Adiciona a classe 'destaque' se marcado como TRUE
+            if (info.destaque && info.destaque.toString().toUpperCase() === 'TRUE') {
+                card.classList.add('destaque');
+            }
+
+            let cardHTML = `<p>${info.mensagem}</p>`;
+            if (info.data) {
+                cardHTML += `<div class="info-date">${new Date(info.data).toLocaleDateString()}</div>`;
+            }
+
+            card.innerHTML = cardHTML;
+            board.appendChild(card);
+        }
+    });
+}
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
         const openModalBtn = document.querySelector('.register-button');
@@ -283,6 +316,7 @@ function renderizarCalendario(funcionarios, ausencias) {
 
     carregarDados();
 });
+
 
 
 
