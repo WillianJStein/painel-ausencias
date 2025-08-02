@@ -93,20 +93,33 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Função para verificar se alguém está ausente hoje (VERSÃO COM AGENDAMENTO)
+// Função para verificar se alguém está ausente hoje (VERSÃO DE DEPURAÇÃO)
 function processarAusencias(funcionarios, ausencias, hoje) {
-    // Zera a hora de 'hoje' para comparar apenas os dias
+    console.log("--- INICIANDO PROCESSAMENTO DE AUSÊNCIAS ---");
     const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+    console.log("Data de hoje para comparação:", hojeSemHoras.toISOString());
 
     return funcionarios.map(func => {
         const ausenciasDoFuncionario = ausencias.filter(aus => aus.id_funcionario == func.id && aus.data_inicio && aus.data_fim);
 
-        // 1. Procura por uma ausência ATIVA HOJE
+        if (func.id == 4) { // Adicionando um espião para o funcionário que deveria estar ausente
+             console.log(`Verificando ausências para o funcionário ID ${func.id} (${func.nome})`);
+             console.log(ausenciasDoFuncionario);
+        }
+
         const ausenciaAtiva = ausenciasDoFuncionario.find(aus => {
             const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
             const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
             const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
             const fim = new Date(+anoFim, mesFim - 1, +diaFim);
+            
             if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return false;
+
+            // Espião mestre: vamos ver a comparação acontecendo
+            if (func.id == 4) { // Espião para o funcionário 4
+                console.log(`Comparando HOJE (${hojeSemHoras.toISOString()}) com INÍCIO (${inicio.toISOString()}) e FIM (${fim.toISOString()})`);
+                console.log('Condição do teste:', hojeSemHoras >= inicio && hojeSemHoras <= fim);
+            }
             
             return hojeSemHoras >= inicio && hojeSemHoras <= fim;
         });
@@ -115,23 +128,20 @@ function processarAusencias(funcionarios, ausencias, hoje) {
             return { ...func, status_atual: ausenciaAtiva.tipo_ausencia, detalhes_ausencia: `${ausenciaAtiva.data_inicio} - ${ausenciaAtiva.data_fim}` };
         }
 
-        // 2. Se não há ausência ativa, procura pela PRÓXIMA ausência agendada
         const proximaAusencia = ausenciasDoFuncionario
-            .map(aus => { // Converte as datas de string para objeto Date
+            .map(aus => {
                 const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
                 const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
                 return { ...aus, dataObj: inicio };
             })
-            .filter(aus => aus.dataObj >= hojeSemHoras) // Filtra apenas as futuras
-            .sort((a, b) => a.dataObj - b.dataObj)[0]; // Ordena e pega a mais próxima
+            .filter(aus => aus.dataObj >= hojeSemHoras)
+            .sort((a, b) => a.dataObj - b.dataObj)[0];
 
         if (proximaAusencia) {
-            // Usa um nome de status diferente para o CSS
             const statusAgendado = proximaAusencia.tipo_ausencia.replace("ç", "c").replace("é", "e") + "-agendada";
             return { ...func, status_atual: statusAgendado, detalhes_ausencia: `Próxima: ${proximaAusencia.data_inicio}` };
         }
 
-        // 3. Se não encontrou nada, está presente
         return { ...func, status_atual: 'Presente' };
     });
 }
@@ -261,5 +271,6 @@ function processarAusencias(funcionarios, ausencias, hoje) {
 
     carregarDados();
 });
+
 
 
