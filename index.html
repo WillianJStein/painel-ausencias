@@ -21,28 +21,21 @@
     <main class="container">
         <div class="left-column">
             <section class="summary-section">
-                <div class="section-header">
-    <h3>Quadro de Informações</h3>
-    <button id="add-info-button" class="add-button">+</button>
-</div>
+                <h3>Resumo de Ausências</h3>
                 <div class="summary-cards">
-    <div class="summary-card present">
-        <span id="count-presentes">0</span>
-        <p>Presentes</p>
-    </div>
-    <div class="summary-card absent">
-        <span id="count-ausentes">0</span>
-        <p>Ausentes</p>
-    </div>
-    <div class="summary-card vacation">
-        <span id="count-ferias">0</span>
-        <p>Em Férias</p>
-    </div>
-    <div class="summary-card scheduled">
-    <span id="count-agendados">0</span>
-    <p>Agendados</p>
-</div>
-    </div>
+                    <div class="summary-card present">
+                        <span id="count-presentes">0</span>
+                        <p>Presentes</p>
+                    </div>
+                    <div class="summary-card absent">
+                        <span id="count-ausentes">0</span>
+                        <p>Ausentes</p>
+                    </div>
+                    <div class="summary-card vacation">
+                        <span id="count-ferias">0</span>
+                        <p>Em Férias</p>
+                    </div>
+                    </div>
             </section>
 
             <section class="calendar-section">
@@ -54,14 +47,16 @@
         <div class="right-column">
             <section class="status-section">
                 <h3>Status por Grupo e Turno</h3>
-                <div id="status-grid" class="status-grid">
-                    </div>
+                <div id="status-grid" class="status-grid"></div>
             </section>
-            </section> <section class="info-section">
-    <h3>Quadro de Informações</h3>
-    <div id="info-board">
-        </div>
-</section>
+
+            <section class="info-section">
+                <div class="section-header">
+                    <h3>Quadro de Informações</h3>
+                    <button id="add-info-button" class="add-button">+</button>
+                </div>
+                <div id="info-board"></div>
+            </section>
         </div>
     </main>
 
@@ -72,8 +67,7 @@
             <form id="absence-form">
                 <div class="form-group">
                     <label for="employee-select">Funcionário:</label>
-                    <select id="employee-select" name="employee-id" required>
-                        </select>
+                    <select id="employee-select" name="employee-id" required></select>
                 </div>
                 <div class="form-group">
                     <label for="absence-type">Tipo de Ausência:</label>
@@ -96,32 +90,28 @@
             </form>
         </div>
     </div>
-</div> <div id="info-modal" class="modal">
-    <div class="modal-content">
-        <span class="close-button">&times;</span>
-        <h2>Adicionar/Editar Informação</h2>
-        <form id="info-form">
-            <input type="hidden" id="info-id" name="info-id"> <div class="form-group">
-                <label for="info-message">Mensagem:</label>
-                <textarea id="info-message" name="info-message" rows="4" required></textarea>
-            </div>
-            <div class="form-group checkbox-group">
-                <input type="checkbox" id="info-highlight" name="info-highlight">
-                <label for="info-highlight">Marcar como destaque?</label>
-            </div>
-            <button type="submit" class="submit-button">Salvar Informação</button>
-        </form>
+
+    <div id="info-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Adicionar/Editar Informação</h2>
+            <form id="info-form">
+                <input type="hidden" id="info-id" name="info-id">
+                <div class="form-group">
+                    <label for="info-message">Mensagem:</label>
+                    <textarea id="info-message" name="info-message" rows="4" required></textarea>
+                </div>
+                <div class="form-group checkbox-group">
+                    <input type="checkbox" id="info-highlight" name="info-highlight">
+                    <label for="info-highlight">Marcar como destaque?</label>
+                </div>
+                <button type="submit" class="submit-button">Salvar Informação</button>
+            </form>
+        </div>
     </div>
-</div>
-<script src='fullcalendar.min.js'></script>
-<script src="script-v2.js?v=2"></script>
+
     <script src='fullcalendar.min.js'></script>
     <script src="script-v2.js?v=2"></script>
 
 </body>
 </html>
-
-
-
-
-
