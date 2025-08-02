@@ -1,30 +1,13 @@
-// ======== CÓDIGO COMPLETO E FINAL PARA O script-v2.js (VERSÃO MISTA E CORRETA) =========
+// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Função "Telegrama Cantado" (JSONP) para LER dados
-    function fetchJSONP(url) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                resolve(data);
-            };
-            const script = document.createElement('script');
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-    }
-
-    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
+                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -43,6 +26,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    // Função para fazer requisições POST para a API
+    async function postData(aba, dados) {
+        const response = await fetch(NOVA_API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8', // Usar text/plain para evitar o 'preflight' do CORS
+            },
+            body: JSON.stringify({ aba: aba, dados: dados }),
+        });
+        return response.json();
+    }
+
+    // O resto do seu código, com pequenas alterações nos formulários para usar o postData
     function processarAusencias(funcionarios, ausencias, hoje) {
         const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
         return funcionarios.map(func => {
@@ -146,7 +143,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         calendar.render();
     }
-
+    
     function renderizarInformacoes(informacoes) {
         const board = document.getElementById('info-board');
         board.innerHTML = '';
@@ -205,12 +202,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                // Para escrever, usamos fetch normal, pois o doPost tem o CORS correto
-                const response = await fetch(`${NOVA_API_URL}?aba=Ausencias`, {
-                    method: 'POST',
-                    body: JSON.stringify(novaAusencia),
-                });
-                const result = await response.json();
+                const result = await postData('Ausencias', novaAusencia);
                 if (result.status === "success") {
                     alert('Ausência registrada com sucesso!');
                     location.reload();
@@ -251,11 +243,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
             try {
-                const response = await fetch(`${NOVA_API_URL}?aba=Informacoes`, {
-                    method: 'POST',
-                    body: JSON.stringify(novaInfo),
-                });
-                const result = await response.json();
+                const result = await postData('Informacoes', novaInfo);
                 if (result.status === "success") {
                     alert('Informação registrada com sucesso!');
                     location.reload();
