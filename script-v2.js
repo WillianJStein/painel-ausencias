@@ -160,15 +160,13 @@ function processarAusencias(funcionarios, ausencias, hoje) {
     let presentes = 0;
     let ferias = 0;
     let ausentes = 0;
-    let agendados = 0;
+
 
     funcionarios.forEach(func => {
         if (func.status_atual === 'Presente') {
             presentes++;
         } else if (func.status_atual === 'Férias') {
             ferias++;
-        } else if (func.status_atual.includes('-agendada')) {
-            agendados++;
         } else { // Qualquer outra ausência HOJE (Atestado, Licença, etc.)
             ausentes++;
         }
@@ -177,7 +175,6 @@ function processarAusencias(funcionarios, ausencias, hoje) {
     document.getElementById('count-presentes').textContent = presentes;
     document.getElementById('count-ferias').textContent = ferias;
     document.getElementById('count-ausentes').textContent = ausentes;
-    document.getElementById('count-agendados').textContent = agendados;
 }
 
 // Função para desenhar o calendário com os dados de ausências (VERSÃO FINAL COM CORES)
@@ -286,6 +283,7 @@ function renderizarCalendario(funcionarios, ausencias) {
 
     carregarDados();
 });
+
 
 
 
