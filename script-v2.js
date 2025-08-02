@@ -235,20 +235,71 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para controlar o Modal de Informações
-    function setupInfoModal() {
-        const modal = document.getElementById('info-modal');
-        const openModalBtn = document.getElementById('add-info-button');
-        const closeModalBtn = modal.querySelector('.close-button');
-        const infoForm = document.getElementById('info-form');
-        openModalBtn.onclick = function() {
-            modal.style.display = 'block';
-        }
-        closeModalBtn.onclick = function() {
-            modal.style.display = 'none';
-        }
+   // Função para controlar o Modal de Informações (VERSÃO FINAL)
+function setupInfoModal() {
+    const modal = document.getElementById('info-modal');
+    const openModalBtn = document.getElementById('add-info-button');
+    const closeModalBtn = modal.querySelector('.close-button'); 
+    const infoForm = document.getElementById('info-form');
+    const submitButton = infoForm.querySelector('.submit-button');
+
+    // Abre o modal
+    openModalBtn.onclick = function() {
+        modal.style.display = 'block';
     }
+
+    // Função para fechar e limpar o modal
+    function fecharModalInfo() {
+        modal.style.display = 'none';
+        infoForm.reset();
+        submitButton.disabled = false;
+        submitButton.textContent = 'Salvar Informação';
+    }
+
+    // Fecha o modal no botão 'X' e se clicar fora
+    closeModalBtn.onclick = fecharModalInfo;
+    window.addEventListener('click', function(event) {
+         if (event.target == modal) {
+            fecharModalInfo();
+        }
+    });
+
+    // Lógica de envio do formulário
+    infoForm.addEventListener('submit', async function(event) {
+        event.preventDefault();
+        submitButton.disabled = true;
+        submitButton.textContent = 'Salvando...';
+
+        const novaInfo = {
+            mensagem: document.getElementById('info-message').value,
+            destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
+        };
+
+        try {
+            const response = await fetch(`${NOVA_API_URL}?aba=Informacoes`, {
+                method: 'POST',
+                body: JSON.stringify(novaInfo),
+            });
+            const result = await response.json();
+
+            if (result.status === "success") {
+                alert('Informação registrada com sucesso!');
+                location.reload();
+            } else {
+                alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Informação';
+            }
+        } catch (error) {
+            console.error('Erro de rede ao enviar formulário de informação:', error);
+            alert('Erro de rede. Verifique sua conexão e tente novamente.');
+            submitButton.disabled = false;
+            submitButton.textContent = 'Salvar Informação';
+        }
+    });
+}
     
     // Inicia o processo
     carregarDados();
 });
+
