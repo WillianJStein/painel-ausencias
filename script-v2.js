@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Função principal para buscar e renderizar os dados
+// Função principal para buscar e renderizar os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
 
-            if (funcionarios.error || ausencias.error) {
-                console.error("Erro da API:", funcionarios.error || ausencias.error);
+            if (funcionarios.error || ausencias.error || informacoes.error) {
+                console.error("Erro da API:", funcionarios.error || ausencias.error || informacoes.error);
                 throw new Error('Uma das abas não foi encontrada ou houve um erro na API.');
             }
 
@@ -339,6 +339,7 @@ function setupInfoModal() {
 }
     carregarDados();
 });
+
 
 
 
