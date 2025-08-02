@@ -252,3 +252,49 @@ h3 {
     color: #6c757d;
     text-align: right;
 }
+
+/* Estilos para o cabeçalho da seção com botão */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--light-gray);
+    margin-bottom: 20px;
+}
+
+.section-header h3 {
+    margin: 0;
+    border: none; /* Remove a borda do h3 que agora está no container */
+}
+
+.add-button {
+    background-color: var(--presente-color);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 30px;
+    height: 30px;
+    font-size: 20px;
+    font-weight: bold;
+    cursor: pointer;
+    line-height: 30px;
+}
+
+/* Estilos para o formulário de informações */
+#info-message {
+    width: calc(100% - 22px);
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-family: 'Roboto', sans-serif;
+}
+
+.checkbox-group {
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-group input {
+    width: auto;
+    margin-right: 10px;
+}
