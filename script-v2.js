@@ -147,16 +147,17 @@ function renderizarCalendario(funcionarios, ausencias) {
     });
     calendar.render();
 }
-	// Função para controlar o Modal de Ausência
+// Função para controlar o Modal de Ausência
 function setupAbsenceModal(funcionarios) {
     const modal = document.getElementById('absence-modal');
     const openModalBtn = document.querySelector('.register-button');
     const closeModalBtn = document.querySelector('.close-button');
     const employeeSelect = document.getElementById('employee-select');
     const absenceForm = document.getElementById('absence-form');
+    const submitButton = absenceForm.querySelector('.submit-button');
 
     // Preenche o seletor com os nomes dos funcionários
-    employeeSelect.innerHTML = '<option value="">Selecione um funcionário</option>'; // Limpa e adiciona a opção padrão
+    employeeSelect.innerHTML = '<option value="">Selecione um funcionário</option>';
     funcionarios.forEach(func => {
         const option = document.createElement('option');
         option.value = func.id;
@@ -169,69 +170,79 @@ function setupAbsenceModal(funcionarios) {
         modal.style.display = 'block';
     }
 
-    // Fecha o modal
-    closeModalBtn.onclick = function() {
+    // Função para fechar o modal
+    function fecharModal() {
         modal.style.display = 'none';
-        absenceForm.reset(); // Limpa o formulário ao fechar
+        absenceForm.reset();
+        submitButton.disabled = false;
+        submitButton.textContent = 'Salvar Ausência';
     }
 
-    // Fecha o modal se clicar fora dele
+    // Fecha o modal no botão 'X' e na área externa
+    closeModalBtn.onclick = fecharModal;
     window.onclick = function(event) {
         if (event.target == modal) {
-            modal.style.display = 'none';
-            absenceForm.reset(); // Limpa o formulário ao fechar
+            fecharModal();
         }
     }
 
-    // --- INÍCIO DA NOVA LÓGICA DE ENVIO ---
+    // --- LÓGICA DE ENVIO ATUALIZADA ---
     absenceForm.addEventListener('submit', async function(event) {
-        event.preventDefault(); // Impede o recarregamento da página
+        event.preventDefault();
+        submitButton.disabled = true;
+        submitButton.textContent = 'Salvando...';
 
-        // Pega os dados do formulário
         const idFuncionario = document.getElementById('employee-select').value;
         const tipoAusencia = document.getElementById('absence-type').value;
-        const dataInicioInput = document.getElementById('start-date').value; // Formato AAAA-MM-DD
-        const dataFimInput = document.getElementById('end-date').value;     // Formato AAAA-MM-DD
+        const dataInicioInput = document.getElementById('start-date').value;
+        const dataFimInput = document.getElementById('end-date').value;
 
-        // Converte as datas para o formato DD/MM/AAAA que está na planilha
         const dataInicioFormatada = dataInicioInput.split('-').reverse().join('/');
         const dataFimFormatada = dataFimInput.split('-').reverse().join('/');
 
-        // Monta o objeto de dados para enviar
         const novaAusencia = {
             id_funcionario: idFuncionario,
             tipo_ausencia: tipoAusencia,
             data_inicio: dataInicioFormatada,
             data_fim: dataFimFormatada
         };
+        
+        // Imprime no console o que estamos enviando
+        console.log('Enviando para a API:', novaAusencia);
 
         try {
-            // Envia os dados para a planilha usando fetch com método POST
             const response = await fetch(`${SHEET_URL}?_tab=Ausencias`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify([novaAusencia]), // Envia os dados como um array
+                body: JSON.stringify(novaAusencia), // Alteração: enviando um objeto único, não um array
             });
 
-            if (response.ok) {
+            // Imprime a resposta completa da API no console para depuração
+            const result = await response.json();
+            console.log('Resposta da API:', result);
+
+            if (response.ok && result.created === 1) { // Verificação mais robusta
                 alert('Ausência registrada com sucesso!');
-                modal.style.display = 'none'; // Fecha o modal
-                absenceForm.reset(); // Limpa o formulário
-                carregarDados(); // Recarrega todos os dados do painel
+                fecharModal();
+                carregarDados();
             } else {
-                alert('Erro ao registrar ausência. Tente novamente.');
+                alert('Erro ao registrar ausência. Resposta da API: ' + (result.message || 'Erro desconhecido'));
+                submitButton.disabled = false;
+                submitButton.textContent = 'Salvar Ausência';
             }
         } catch (error) {
             console.error('Erro de rede ao enviar formulário:', error);
             alert('Erro de rede. Verifique sua conexão e tente novamente.');
+            submitButton.disabled = false;
+            submitButton.textContent = 'Salvar Ausência';
         }
     });
-    // --- FIM DA  LÓGICA DE ENVIO ---
 }
     // Inicia o processo
     carregarDados();
 });
+
 
 
