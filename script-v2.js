@@ -94,54 +94,39 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Função para verificar se alguém está ausente hoje (VERSÃO COM AGENDAMENTO)
 // Função para verificar se alguém está ausente hoje (VERSÃO DE DEPURAÇÃO)
+// Função para verificar se alguém está ausente hoje (VERSÃO FINAL)
 function processarAusencias(funcionarios, ausencias, hoje) {
-    console.log("--- INICIANDO PROCESSAMENTO DE AUSÊNCIAS ---");
     const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
-    console.log("Data de hoje para comparação:", hojeSemHoras.toISOString());
 
     return funcionarios.map(func => {
         const ausenciasDoFuncionario = ausencias.filter(aus => aus.id_funcionario == func.id && aus.data_inicio && aus.data_fim);
 
-        if (func.id == 4) { // Adicionando um espião para o funcionário que deveria estar ausente
-             console.log(`Verificando ausências para o funcionário ID ${func.id} (${func.nome})`);
-             console.log(ausenciasDoFuncionario);
-        }
-
+        // 1. Procura por uma ausência ATIVA HOJE
         const ausenciaAtiva = ausenciasDoFuncionario.find(aus => {
-            const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
-            const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
-            const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
-            const fim = new Date(+anoFim, mesFim - 1, +diaFim);
-            
+            const inicio = new Date(aus.data_inicio); // Simplificado!
+            const fim = new Date(aus.data_fim);       // Simplificado!
             if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return false;
 
-            // Espião mestre: vamos ver a comparação acontecendo
-            if (func.id == 4) { // Espião para o funcionário 4
-                console.log(`Comparando HOJE (${hojeSemHoras.toISOString()}) com INÍCIO (${inicio.toISOString()}) e FIM (${fim.toISOString()})`);
-                console.log('Condição do teste:', hojeSemHoras >= inicio && hojeSemHoras <= fim);
-            }
-            
             return hojeSemHoras >= inicio && hojeSemHoras <= fim;
         });
 
         if (ausenciaAtiva) {
-            return { ...func, status_atual: ausenciaAtiva.tipo_ausencia, detalhes_ausencia: `${ausenciaAtiva.data_inicio} - ${ausenciaAtiva.data_fim}` };
+            return { ...func, status_atual: ausenciaAtiva.tipo_ausencia, detalhes_ausencia: `${new Date(ausenciaAtiva.data_inicio).toLocaleDateString()} - ${new Date(ausenciaAtiva.data_fim).toLocaleDateString()}` };
         }
 
+        // 2. Se não há ausência ativa, procura pela PRÓXIMA ausência agendada
         const proximaAusencia = ausenciasDoFuncionario
-            .map(aus => {
-                const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
-                const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
-                return { ...aus, dataObj: inicio };
-            })
+            .map(aus => ({ ...aus, dataObj: new Date(aus.data_inicio) })) // Simplificado!
             .filter(aus => aus.dataObj >= hojeSemHoras)
             .sort((a, b) => a.dataObj - b.dataObj)[0];
 
         if (proximaAusencia) {
-            const statusAgendado = proximaAusencia.tipo_ausencia.replace("ç", "c").replace("é", "e") + "-agendada";
-            return { ...func, status_atual: statusAgendado, detalhes_ausencia: `Próxima: ${proximaAusencia.data_inicio}` };
+            const statusAgendado = proximaAusencia.tipo_ausencia.replace(/\s/g, '-').replace("ç", "c").replace("é", "e").toLowerCase() + "-agendada";
+            // Corrigido para exibir a data no formato brasileiro
+            return { ...func, status_atual: statusAgendado, detalhes_ausencia: `Próxima: ${new Date(proximaAusencia.data_inicio).toLocaleDateString()}` };
         }
 
+        // 3. Se não encontrou nada, está presente
         return { ...func, status_atual: 'Presente' };
     });
 }
@@ -179,39 +164,47 @@ function processarAusencias(funcionarios, ausencias, hoje) {
         document.getElementById('count-ausentes').textContent = outrasAusencias;
     }
 
-    function renderizarCalendario(funcionarios, ausencias) {
-        const calendarEl = document.getElementById('calendar');
-        const eventos = [];
-        ausencias.forEach(aus => {
-            if (!aus.id_funcionario || !aus.data_inicio || !aus.data_fim) return;
-            try {
-                const funcionario = funcionarios.find(f => f.id == aus.id_funcionario);
-                const nomeFuncionario = funcionario ? funcionario.nome : 'Desconhecido';
-                const partesInicio = aus.data_inicio.split('/');
-                const partesFim = aus.data_fim.split('/');
-                if (partesInicio.length !== 3 || partesFim.length !== 3) return;
-                const inicio = new Date(+partesInicio[2], partesInicio[1] - 1, +partesInicio[0]);
-                const fim = new Date(+partesFim[2], partesFim[1] - 1, +partesFim[0]);
-                if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return;
-                fim.setDate(fim.getDate() + 1);
-                eventos.push({
-                    title: `${aus.tipo_ausencia} - ${nomeFuncionario}`,
-                    start: inicio.toISOString().split('T')[0],
-                    end: fim.toISOString().split('T')[0],
-                });
-            } catch (error) {
-                console.error("Erro ao processar uma ausência para o calendário:", aus, error);
-            }
-        });
-        const calendar = new FullCalendar.Calendar(calendarEl, {
-            initialView: 'dayGridMonth',
-            locale: 'pt-br',
-            headerToolbar: { left: 'prev,next today', center: 'title', right: 'dayGridMonth,timeGridWeek' },
-            events: eventos,
-            eventColor: '#dc3545'
-        });
-        calendar.render();
-    }
+    // Função para desenhar o calendário com os dados de ausências (VERSÃO FINAL)
+function renderizarCalendario(funcionarios, ausencias) {
+    const calendarEl = document.getElementById('calendar');
+
+    const eventos = [];
+    ausencias.forEach(aus => {
+        if (!aus.id_funcionario || !aus.data_inicio || !aus.data_fim) return;
+        try {
+            const funcionario = funcionarios.find(f => f.id == aus.id_funcionario);
+            const nomeFuncionario = funcionario ? funcionario.nome : 'Desconhecido';
+
+            const inicio = new Date(aus.data_inicio); // Simplificado!
+            const fim = new Date(aus.data_fim);       // Simplificado!
+
+            if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return;
+
+            fim.setDate(fim.getDate() + 1);
+
+            eventos.push({
+                title: `${aus.tipo_ausencia} - ${nomeFuncionario}`,
+                start: inicio.toISOString().split('T')[0],
+                end: fim.toISOString().split('T')[0],
+            });
+        } catch (error) {
+            console.error("Erro ao processar uma ausência para o calendário:", aus, error);
+        }
+    });
+
+    const calendar = new FullCalendar.Calendar(calendarEl, {
+        initialView: 'dayGridMonth',
+        locale: 'pt-br',
+        headerToolbar: {
+            left: 'prev,next today',
+            center: 'title',
+            right: 'dayGridMonth,timeGridWeek'
+        },
+        events: eventos,
+        eventColor: '#dc3545'
+    });
+    calendar.render();
+}
 
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
@@ -271,6 +264,7 @@ function processarAusencias(funcionarios, ausencias, hoje) {
 
     carregarDados();
 });
+
 
 
 
