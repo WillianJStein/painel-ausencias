@@ -1,45 +1,30 @@
+// ======== CÓDIGO COMPLETO E FINAL PARA O script-v2.js (VERSÃO MISTA E CORRETA) =========
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    async function carregarDados() {
-        try {
-            const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
-            ]);
-            if (funcionarios.error || ausencias.error || informacoes.error) {
-                throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
-            }
-            const hoje = new Date();
-            const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
-            renderizarPainel(dadosProcessados);
-            atualizarResumo(dadosProcessados);
-            renderizarCalendario(funcionarios, ausencias);
-            renderizarInformacoes(informacoes);
-            setupAbsenceModal(funcionarios);
-            setupInfoModal();
-        } catch (error) {
-            console.error('Erro ao carregar dados:', error);
-            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
-        }
+    // Função "Telegrama Cantado" (JSONP) para LER dados
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
     }
 
-    // Cole aqui o resto das suas funções (processarAusencias, renderizarPainel, etc.)
-    // Para garantir, o código completo está na caixa abaixo.
-});
-
-
-// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js ##########
-document.addEventListener('DOMContentLoaded', function() {
-    const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
-
+    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -220,6 +205,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
+                // Para escrever, usamos fetch normal, pois o doPost tem o CORS correto
                 const response = await fetch(`${NOVA_API_URL}?aba=Ausencias`, {
                     method: 'POST',
                     body: JSON.stringify(novaAusencia),
