@@ -222,8 +222,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 const result = await response.json();
                 if (result.status === "success") {
                     alert('Ausência registrada com sucesso!');
-                    fecharModal();
-                    carregarDados();
+                    location.reload();
                 } else {
                     alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
                     submitButton.disabled = false;
@@ -240,3 +239,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     carregarDados();
 });
+
