@@ -40,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarCalendario(funcionarios, ausencias);
             setupAbsenceModal(funcionarios);
             renderizarInformacoes(informacoes);
+            setupInfoModal();
 
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
@@ -313,9 +314,32 @@ function renderizarInformacoes(informacoes) {
             }
         });
     }
+// Função para controlar o Modal de Informações
+function setupInfoModal() {
+    const modal = document.getElementById('info-modal');
+    const openModalBtn = document.getElementById('add-info-button');
+    // Pega o botão de fechar específico deste modal
+    const closeModalBtn = modal.querySelector('.close-button'); 
+    const infoForm = document.getElementById('info-form');
 
+    // Abre o modal
+    openModalBtn.onclick = function() {
+        modal.style.display = 'block';
+    }
+
+    // Fecha o modal
+    closeModalBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    // Fecha o modal se clicar fora dele
+    // (Vamos adicionar essa lógica depois para não criar conflito com o outro modal)
+
+    // AQUI VAMOS ADICIONAR A LÓGICA DE ENVIO DO FORMULÁRIO DEPOIS
+}
     carregarDados();
 });
+
 
 
 
