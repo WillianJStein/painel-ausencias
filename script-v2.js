@@ -117,38 +117,64 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('count-ferias').textContent = ferias;
         document.getElementById('count-ausentes').textContent = outrasAusencias;
     }
-// Função para desenhar o calendário com os dados de ausências
+// Função para desenhar o calendário com os dados de ausências 
 function renderizarCalendario(funcionarios, ausencias) {
     const calendarEl = document.getElementById('calendar');
 
-    // Formata os dados de ausências para o formato que o FullCalendar entende
-    // ADICIONAMOS O .filter() AQUI para ignorar linhas vazias da planilha
-    const eventos = ausencias.filter(aus => aus.data_inicio && aus.data_fim).map(aus => {
-        const funcionario = funcionarios.find(f => f.id == aus.id_funcionario);
-        const nomeFuncionario = funcionario ? funcionario.nome : 'Desconhecido';
-        
-        // Corrige as datas para incluir o dia final completo
-        const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
-        const dataFinalCorrigida = new Date(+anoFim, mesFim - 1, +diaFim);
-        dataFinalCorrigida.setDate(dataFinalCorrigida.getDate() + 1);
+    const eventos = []; // Começa com uma lista de eventos vazia
 
-        return {
-            title: `${aus.tipo_ausencia} - ${nomeFuncionario}`,
-            start: aus.data_inicio.split('/').reverse().join('-'), // Formato AAAA-MM-DD
-            end: dataFinalCorrigida.toISOString().split('T')[0], // Formato AAAA-MM-DD
-        };
+    // Processa cada ausência individualmente com verificação de segurança
+    ausencias.forEach(aus => {
+        // Pula a linha se não tiver os dados mínimos necessários
+        if (!aus.id_funcionario || !aus.data_inicio || !aus.data_fim) {
+            return; 
+        }
+
+        try {
+            const funcionario = funcionarios.find(f => f.id == aus.id_funcionario);
+            const nomeFuncionario = funcionario ? funcionario.nome : 'Desconhecido';
+
+            // Validação robusta da data de início
+            const partesInicio = aus.data_inicio.split('/');
+            if (partesInicio.length !== 3) return; // Pula se o formato não for DD/MM/AAAA
+            const inicio = new Date(+partesInicio[2], partesInicio[1] - 1, +partesInicio[0]);
+
+            // Validação robusta da data de fim
+            const partesFim = aus.data_fim.split('/');
+            if (partesFim.length !== 3) return; // Pula se o formato não for DD/MM/AAAA
+            const fim = new Date(+partesFim[2], partesFim[1] - 1, +partesFim[0]);
+
+            // Verifica se as datas criadas são válidas
+            if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) {
+                console.warn('Data inválida encontrada e ignorada:', aus);
+                return; // Pula esta ausência se a data for inválida
+            }
+            
+            // Adiciona 1 dia à data final para que o FullCalendar inclua o último dia
+            fim.setDate(fim.getDate() + 1);
+
+            // Adiciona o evento à lista
+            eventos.push({
+                title: `${aus.tipo_ausencia} - ${nomeFuncionario}`,
+                start: inicio.toISOString().split('T')[0],
+                end: fim.toISOString().split('T')[0],
+            });
+
+        } catch (error) {
+            console.error("Erro ao processar uma ausência para o calendário:", aus, error);
+        }
     });
 
     const calendar = new FullCalendar.Calendar(calendarEl, {
         initialView: 'dayGridMonth',
-        locale: 'pt-br', // Define o idioma para Português do Brasil
+        locale: 'pt-br',
         headerToolbar: {
             left: 'prev,next today',
             center: 'title',
             right: 'dayGridMonth,timeGridWeek'
         },
         events: eventos,
-        eventColor: '#dc3545' // Cor dos eventos
+        eventColor: '#dc3545'
     });
     calendar.render();
 }
@@ -228,7 +254,7 @@ function setupAbsenceModal(funcionarios) {
             const result = await response.json();
             console.log('Resposta da API:', result);
 
-            if (response.ok && result.created === 1) { // Verificação mais robusta
+            if (response.ok && result.created === 1) {
                 alert('Ausência registrada com sucesso!');
                 fecharModal();
                 carregarDados();
@@ -248,6 +274,7 @@ function setupAbsenceModal(funcionarios) {
     // Inicia o processo
     carregarDados();
 });
+
 
 
 
