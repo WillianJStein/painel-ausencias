@@ -268,7 +268,7 @@ h3 {
 }
 
 .add-button {
-    background-color: var(--presente-color);
+    background-color: var(--primary-color);
     color: white;
     border: none;
     border-radius: 50%;
@@ -298,3 +298,4 @@ h3 {
     width: auto;
     margin-right: 10px;
 }
+
