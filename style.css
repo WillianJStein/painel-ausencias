@@ -147,4 +147,10 @@ h3 {
 }
 .status-presente { color: var(--presente-color); }
 .status-férias { color: var(--ferias-color); }
+
 .status-licença { color: var(--ausente-color); }
+
+#calendar {
+    min-height: 450px; 
+    font-size: 14px; 
+}
