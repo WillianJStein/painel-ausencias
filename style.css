@@ -89,7 +89,7 @@ h3 {
 .summary-card.present span { color: var(--presente-color); }
 .summary-card.absent span { color: var(--ausente-color); }
 .summary-card.vacation span { color: var(--ferias-color); }
-
+.summary-card.scheduled span { color: var(--secondary-color); }
 
 /* Status por Grupo */
 .status-grid {
@@ -226,3 +226,4 @@ h3 {
 }
 
 .status-ferias-agendada { color: #007bff; }
+
