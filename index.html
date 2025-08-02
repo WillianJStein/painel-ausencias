@@ -4,13 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Controle de Ausências</title>
+    
     <link rel="stylesheet" href="style.css">
     <link href='fullcalendar.min.css' rel='stylesheet' />
-
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
-    
-    <script src='fullcalendar.min.js'></script>
-    <script src="script-v2.js" defer></script>
 </head>
 <body>
     <header>
@@ -55,5 +52,41 @@
             </section>
         </div>
     </main>
+
+    <div id="absence-modal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2>Registrar Nova Ausência</h2>
+            <form id="absence-form">
+                <div class="form-group">
+                    <label for="employee-select">Funcionário:</label>
+                    <select id="employee-select" name="employee-id" required>
+                        </select>
+                </div>
+                <div class="form-group">
+                    <label for="absence-type">Tipo de Ausência:</label>
+                    <select id="absence-type" name="absence-type" required>
+                        <option value="Férias">Férias</option>
+                        <option value="Licença">Licença</option>
+                        <option value="Atestado">Atestado</option>
+                        <option value="Outro">Outro</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="start-date">Data de Início:</label>
+                    <input type="date" id="start-date" name="start-date" required>
+                </div>
+                <div class="form-group">
+                    <label for="end-date">Data de Fim:</label>
+                    <input type="date" id="end-date" name="end-date" required>
+                </div>
+                <button type="submit" class="submit-button">Salvar Ausência</button>
+            </form>
+        </div>
+    </div>
+
+    <script src='fullcalendar.min.js'></script>
+    <script src="script-v2.js"></script>
+
 </body>
 </html>
