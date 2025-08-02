@@ -92,27 +92,49 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function processarAusencias(funcionarios, ausencias, hoje) {
-        return funcionarios.map(func => {
-            const ausenciaAtiva = ausencias.find(aus => {
-                if (aus.id_funcionario == func.id && aus.data_inicio && aus.data_fim) {
-                    const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
-                    const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
-                    const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
-                    const fim = new Date(+anoFim, mesFim - 1, +diaFim);
-                    if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return false;
-                    fim.setHours(23, 59, 59, 999);
-                    return hoje >= inicio && hoje <= fim;
-                }
-                return false;
-            });
-            if (ausenciaAtiva) {
-                return { ...func, status_atual: ausenciaAtiva.tipo_ausencia, detalhes_ausencia: `${ausenciaAtiva.data_inicio} - ${ausenciaAtiva.data_fim}` };
-            } else {
-                return { ...func, status_atual: 'Presente' };
-            }
+    // Função para verificar se alguém está ausente hoje (VERSÃO COM AGENDAMENTO)
+function processarAusencias(funcionarios, ausencias, hoje) {
+    // Zera a hora de 'hoje' para comparar apenas os dias
+    const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
+
+    return funcionarios.map(func => {
+        const ausenciasDoFuncionario = ausencias.filter(aus => aus.id_funcionario == func.id && aus.data_inicio && aus.data_fim);
+
+        // 1. Procura por uma ausência ATIVA HOJE
+        const ausenciaAtiva = ausenciasDoFuncionario.find(aus => {
+            const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
+            const [diaFim, mesFim, anoFim] = aus.data_fim.split('/');
+            const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
+            const fim = new Date(+anoFim, mesFim - 1, +diaFim);
+            if (isNaN(inicio.getTime()) || isNaN(fim.getTime())) return false;
+            
+            return hojeSemHoras >= inicio && hojeSemHoras <= fim;
         });
-    }
+
+        if (ausenciaAtiva) {
+            return { ...func, status_atual: ausenciaAtiva.tipo_ausencia, detalhes_ausencia: `${ausenciaAtiva.data_inicio} - ${ausenciaAtiva.data_fim}` };
+        }
+
+        // 2. Se não há ausência ativa, procura pela PRÓXIMA ausência agendada
+        const proximaAusencia = ausenciasDoFuncionario
+            .map(aus => { // Converte as datas de string para objeto Date
+                const [diaInicio, mesInicio, anoInicio] = aus.data_inicio.split('/');
+                const inicio = new Date(+anoInicio, mesInicio - 1, +diaInicio);
+                return { ...aus, dataObj: inicio };
+            })
+            .filter(aus => aus.dataObj >= hojeSemHoras) // Filtra apenas as futuras
+            .sort((a, b) => a.dataObj - b.dataObj)[0]; // Ordena e pega a mais próxima
+
+        if (proximaAusencia) {
+            // Usa um nome de status diferente para o CSS
+            const statusAgendado = proximaAusencia.tipo_ausencia.replace("ç", "c").replace("é", "e") + "-agendada";
+            return { ...func, status_atual: statusAgendado, detalhes_ausencia: `Próxima: ${proximaAusencia.data_inicio}` };
+        }
+
+        // 3. Se não encontrou nada, está presente
+        return { ...func, status_atual: 'Presente' };
+    });
+}
 
     function renderizarPainel(funcionarios) {
         const grid = document.getElementById('status-grid');
@@ -239,4 +261,5 @@ document.addEventListener('DOMContentLoaded', function() {
 
     carregarDados();
 });
+
 
