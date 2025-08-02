@@ -1,30 +1,12 @@
-// ======== CÓDIGO COMPLETO E FINAL PARA O script-v2.js =========
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Função "Telegrama Cantado" (JSONP) para LER dados, contornando o CORS
-    function fetchJSONP(url) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                resolve(data);
-            };
-            const script = document.createElement('script');
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
-    }
-
-    // Função principal que carrega todos os dados na inicialização
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
+                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -43,7 +25,39 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para processar o status de cada funcionário
+    // Cole aqui o resto das suas funções (processarAusencias, renderizarPainel, etc.)
+    // Para garantir, o código completo está na caixa abaixo.
+});
+
+
+// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js ##########
+document.addEventListener('DOMContentLoaded', function() {
+    const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
+
+    async function carregarDados() {
+        try {
+            const [funcionarios, ausencias, informacoes] = await Promise.all([
+                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
+            ]);
+            if (funcionarios.error || ausencias.error || informacoes.error) {
+                throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
+            }
+            const hoje = new Date();
+            const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
+            renderizarPainel(dadosProcessados);
+            atualizarResumo(dadosProcessados);
+            renderizarCalendario(funcionarios, ausencias);
+            renderizarInformacoes(informacoes);
+            setupAbsenceModal(funcionarios);
+            setupInfoModal();
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
+        }
+    }
+
     function processarAusencias(funcionarios, ausencias, hoje) {
         const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
         return funcionarios.map(func => {
@@ -73,7 +87,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para renderizar os cards de status
     function renderizarPainel(funcionarios) {
         const grid = document.getElementById('status-grid');
         grid.innerHTML = '';
@@ -98,7 +111,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para renderizar o resumo
     function atualizarResumo(funcionarios) {
         let presentes = 0;
         let ferias = 0;
@@ -117,7 +129,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('count-ausentes').textContent = ausentes;
     }
 
-    // Função para renderizar o calendário
     function renderizarCalendario(funcionarios, ausencias) {
         const calendarEl = document.getElementById('calendar');
         const coresDosEventos = { 'Atestado': '#dc3545', 'Férias': '#fd7e14', 'Licença': '#6f42c1' };
@@ -150,8 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         calendar.render();
     }
-    
-    // Função para renderizar o quadro de informações
+
     function renderizarInformacoes(informacoes) {
         const board = document.getElementById('info-board');
         board.innerHTML = '';
@@ -177,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para configurar o modal de ausências
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
         const openModalBtn = document.querySelector('.register-button');
@@ -211,13 +220,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                await fetch(`${NOVA_API_URL}?aba=Ausencias`, {
+                const response = await fetch(`${NOVA_API_URL}?aba=Ausencias`, {
                     method: 'POST',
-                    mode: 'no-cors', // Usamos no-cors para POST, pois só precisamos enviar
                     body: JSON.stringify(novaAusencia),
                 });
-                alert('Ausência enviada para registro! A página será atualizada.');
-                location.reload();
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert('Ausência registrada com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Ausência';
+                }
             } catch (error) {
                 console.error('Erro de rede ao enviar formulário:', error);
                 alert('Erro de rede. Verifique sua conexão e tente novamente.');
@@ -227,7 +242,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para configurar o modal de informações
     function setupInfoModal() {
         const modal = document.getElementById('info-modal');
         const openModalBtn = document.getElementById('add-info-button');
@@ -251,13 +265,19 @@ document.addEventListener('DOMContentLoaded', function() {
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
             try {
-                await fetch(`${NOVA_API_URL}?aba=Informacoes`, {
+                const response = await fetch(`${NOVA_API_URL}?aba=Informacoes`, {
                     method: 'POST',
-                    mode: 'no-cors',
                     body: JSON.stringify(novaInfo),
                 });
-                alert('Informação enviada para registro! A página será atualizada.');
-                location.reload();
+                const result = await response.json();
+                if (result.status === "success") {
+                    alert('Informação registrada com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Informação';
+                }
             } catch (error) {
                 console.error('Erro de rede ao enviar formulário de informação:', error);
                 alert('Erro de rede. Verifique sua conexão e tente novamente.');
@@ -279,6 +299,5 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 
-    // Inicia o processo
     carregarDados();
 });
