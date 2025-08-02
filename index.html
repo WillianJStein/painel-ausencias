@@ -21,7 +21,10 @@
     <main class="container">
         <div class="left-column">
             <section class="summary-section">
-                <h3>Resumo de Ausências</h3>
+                <div class="section-header">
+    <h3>Quadro de Informações</h3>
+    <button id="add-info-button" class="add-button">+</button>
+</div>
                 <div class="summary-cards">
     <div class="summary-card present">
         <span id="count-presentes">0</span>
@@ -93,12 +96,31 @@
             </form>
         </div>
     </div>
-
+</div> <div id="info-modal" class="modal">
+    <div class="modal-content">
+        <span class="close-button">&times;</span>
+        <h2>Adicionar/Editar Informação</h2>
+        <form id="info-form">
+            <input type="hidden" id="info-id" name="info-id"> <div class="form-group">
+                <label for="info-message">Mensagem:</label>
+                <textarea id="info-message" name="info-message" rows="4" required></textarea>
+            </div>
+            <div class="form-group checkbox-group">
+                <input type="checkbox" id="info-highlight" name="info-highlight">
+                <label for="info-highlight">Marcar como destaque?</label>
+            </div>
+            <button type="submit" class="submit-button">Salvar Informação</button>
+        </form>
+    </div>
+</div>
+<script src='fullcalendar.min.js'></script>
+<script src="script-v2.js?v=2"></script>
     <script src='fullcalendar.min.js'></script>
     <script src="script-v2.js?v=2"></script>
 
 </body>
 </html>
+
 
 
 
