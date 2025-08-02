@@ -156,13 +156,28 @@ function processarAusencias(funcionarios, ausencias, hoje) {
     }
 
     function atualizarResumo(funcionarios) {
-        const presentes = funcionarios.filter(f => f.status_atual === 'Presente').length;
-        const ferias = funcionarios.filter(f => f.status_atual === 'Férias').length;
-        const outrasAusencias = funcionarios.filter(f => f.status_atual !== 'Presente' && f.status_atual !== 'Férias').length;
-        document.getElementById('count-presentes').textContent = presentes;
-        document.getElementById('count-ferias').textContent = ferias;
-        document.getElementById('count-ausentes').textContent = outrasAusencias;
-    }
+    let presentes = 0;
+    let ferias = 0;
+    let ausentes = 0;
+    let agendados = 0;
+
+    funcionarios.forEach(func => {
+        if (func.status_atual === 'Presente') {
+            presentes++;
+        } else if (func.status_atual === 'Férias') {
+            ferias++;
+        } else if (func.status_atual.includes('-agendada')) {
+            agendados++;
+        } else { // Qualquer outra ausência HOJE (Atestado, Licença, etc.)
+            ausentes++;
+        }
+    });
+
+    document.getElementById('count-presentes').textContent = presentes;
+    document.getElementById('count-ferias').textContent = ferias;
+    document.getElementById('count-ausentes').textContent = ausentes;
+    document.getElementById('count-agendados').textContent = agendados;
+}
 
     // Função para desenhar o calendário com os dados de ausências (VERSÃO FINAL)
 function renderizarCalendario(funcionarios, ausencias) {
@@ -264,6 +279,7 @@ function renderizarCalendario(funcionarios, ausencias) {
 
     carregarDados();
 });
+
 
 
 
