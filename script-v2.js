@@ -153,6 +153,7 @@ function setupAbsenceModal(funcionarios) {
     const openModalBtn = document.querySelector('.register-button');
     const closeModalBtn = document.querySelector('.close-button');
     const employeeSelect = document.getElementById('employee-select');
+    const absenceForm = document.getElementById('absence-form');
 
     // Preenche o seletor com os nomes dos funcionários
     employeeSelect.innerHTML = '<option value="">Selecione um funcionário</option>'; // Limpa e adiciona a opção padrão
@@ -171,18 +172,66 @@ function setupAbsenceModal(funcionarios) {
     // Fecha o modal
     closeModalBtn.onclick = function() {
         modal.style.display = 'none';
+        absenceForm.reset(); // Limpa o formulário ao fechar
     }
 
     // Fecha o modal se clicar fora dele
     window.onclick = function(event) {
         if (event.target == modal) {
             modal.style.display = 'none';
+            absenceForm.reset(); // Limpa o formulário ao fechar
         }
     }
 
-    // AQUI VAMOS ADICIONAR A LÓGICA DE ENVIO DO FORMULÁRIO DEPOIS
+    // --- INÍCIO DA NOVA LÓGICA DE ENVIO ---
+    absenceForm.addEventListener('submit', async function(event) {
+        event.preventDefault(); // Impede o recarregamento da página
+
+        // Pega os dados do formulário
+        const idFuncionario = document.getElementById('employee-select').value;
+        const tipoAusencia = document.getElementById('absence-type').value;
+        const dataInicioInput = document.getElementById('start-date').value; // Formato AAAA-MM-DD
+        const dataFimInput = document.getElementById('end-date').value;     // Formato AAAA-MM-DD
+
+        // Converte as datas para o formato DD/MM/AAAA que está na planilha
+        const dataInicioFormatada = dataInicioInput.split('-').reverse().join('/');
+        const dataFimFormatada = dataFimInput.split('-').reverse().join('/');
+
+        // Monta o objeto de dados para enviar
+        const novaAusencia = {
+            id_funcionario: idFuncionario,
+            tipo_ausencia: tipoAusencia,
+            data_inicio: dataInicioFormatada,
+            data_fim: dataFimFormatada
+        };
+
+        try {
+            // Envia os dados para a planilha usando fetch com método POST
+            const response = await fetch(`${SHEET_URL}?_tab=Ausencias`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify([novaAusencia]), // Envia os dados como um array
+            });
+
+            if (response.ok) {
+                alert('Ausência registrada com sucesso!');
+                modal.style.display = 'none'; // Fecha o modal
+                absenceForm.reset(); // Limpa o formulário
+                carregarDados(); // Recarrega todos os dados do painel
+            } else {
+                alert('Erro ao registrar ausência. Tente novamente.');
+            }
+        } catch (error) {
+            console.error('Erro de rede ao enviar formulário:', error);
+            alert('Erro de rede. Verifique sua conexão e tente novamente.');
+        }
+    });
+    // --- FIM DA  LÓGICA DE ENVIO ---
 }
     // Inicia o processo
     carregarDados();
 });
+
 
