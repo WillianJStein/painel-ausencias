@@ -4,30 +4,35 @@ document.addEventListener('DOMContentLoaded', function() {
     // URL da sua API gerada pelo Sheet.best (exatamente como o site fornece)
     const SHEET_URL = 'https://api.sheetbest.com/sheets/03fb9dd1-3bd9-4c41-a5d5-dad1f5574eaf';
 
-    // Função principal para buscar e renderizar os dados
+// Função principal para buscar e renderizar os dados
     async function carregarDados() {
+        // <<-- AQUI ESTÁ A GRANDE MUDANÇA -->>
+        const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
+
         try {
-            // Busca dados de ambas as abas usando o parâmetro "?_tab=NomeDaAba"
+            // Busca dados de ambas as abas usando o parâmetro "?aba=NomeDaAba"
             const [funcionarios, ausencias] = await Promise.all([
-                fetch(`${SHEET_URL}?_tab=Funcionarios`).then(res => res.json()),
-                fetch(`${SHEET_URL}?_tab=Ausencias`).then(res => res.json())
+                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
+                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json())
             ]);
 
             // Se a busca falhar e retornar um objeto com 'error', lança um erro
             if (funcionarios.error || ausencias.error) {
-                throw new Error('Uma das abas não foi encontrada. Verifique os nomes das abas na planilha.');
+                // Imprime o erro específico no console para nos ajudar a depurar
+                console.error("Erro da API:", funcionarios.error || ausencias.error);
+                throw new Error('Uma das abas não foi encontrada ou houve um erro na API.');
             }
 
             const hoje = new Date();
             const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
             renderizarPainel(dadosProcessados);
             atualizarResumo(dadosProcessados);
-		renderizarCalendario(funcionarios, ausencias);
-		setupAbsenceModal(funcionarios);
+            renderizarCalendario(funcionarios, ausencias);
+            setupAbsenceModal(funcionarios);
 
         } catch (error) {
             console.error('Erro ao buscar dados da planilha:', error);
-            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique a URL e os nomes das abas na planilha.</p>';
+            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console para mais detalhes.</p>';
         }
     }
 
@@ -243,6 +248,7 @@ function setupAbsenceModal(funcionarios) {
     // Inicia o processo
     carregarDados();
 });
+
 
 
 
