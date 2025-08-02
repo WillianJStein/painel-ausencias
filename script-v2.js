@@ -22,7 +22,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
             renderizarPainel(dadosProcessados);
             atualizarResumo(dadosProcessados);
-			renderizarCalendario(funcionarios, ausencias);
+		renderizarCalendario(funcionarios, ausencias);
+		setupAbsenceModal(funcionarios);
 
         } catch (error) {
             console.error('Erro ao buscar dados da planilha:', error);
@@ -146,6 +147,42 @@ function renderizarCalendario(funcionarios, ausencias) {
     });
     calendar.render();
 }
+	// Função para controlar o Modal de Ausência
+function setupAbsenceModal(funcionarios) {
+    const modal = document.getElementById('absence-modal');
+    const openModalBtn = document.querySelector('.register-button');
+    const closeModalBtn = document.querySelector('.close-button');
+    const employeeSelect = document.getElementById('employee-select');
+
+    // Preenche o seletor com os nomes dos funcionários
+    employeeSelect.innerHTML = '<option value="">Selecione um funcionário</option>'; // Limpa e adiciona a opção padrão
+    funcionarios.forEach(func => {
+        const option = document.createElement('option');
+        option.value = func.id;
+        option.textContent = func.nome;
+        employeeSelect.appendChild(option);
+    });
+
+    // Abre o modal
+    openModalBtn.onclick = function() {
+        modal.style.display = 'block';
+    }
+
+    // Fecha o modal
+    closeModalBtn.onclick = function() {
+        modal.style.display = 'none';
+    }
+
+    // Fecha o modal se clicar fora dele
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = 'none';
+        }
+    }
+
+    // AQUI VAMOS ADICIONAR A LÓGICA DE ENVIO DO FORMULÁRIO DEPOIS
+}
     // Inicia o processo
     carregarDados();
 });
+
