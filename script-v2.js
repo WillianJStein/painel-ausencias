@@ -1,16 +1,30 @@
 // Aguarda o carregamento completo da página para rodar o script
 document.addEventListener('DOMContentLoaded', function() {
-
-    // <<<--- A URL CORRETA DA SUA NOVA API DO GOOGLE APPS SCRIPT ---<<<
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
+    // Nova função para buscar dados usando a técnica JSONP ("telegrama cantado")
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    }
+    
     // Função principal para buscar e renderizar os dados
     async function carregarDados() {
         try {
-            // Busca dados de ambas as abas usando a nova API
             const [funcionarios, ausencias] = await Promise.all([
-                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json())
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`)
             ]);
 
             if (funcionarios.error || ausencias.error) {
@@ -30,8 +44,54 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console para mais detalhes.</p>';
         }
     }
+    
+    // O resto do seu código (processarAusencias, renderizarPainel, etc.) continua EXATAMENTE IGUAL
+    // ... (cole aqui todo o resto do seu script-v2.js, da função "processarAusencias" até o final)
+    // ... (Para facilitar, estou incluindo o código completo abaixo)
+});
 
-    // Função para processar as ausências e determinar o status atual
+
+// ======== CÓDIGO COMPLETO PARA O script-v2.js (COPIE TUDO ABAIXO) =========
+document.addEventListener('DOMContentLoaded', function() {
+    const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
+
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    }
+
+    async function carregarDados() {
+        try {
+            const [funcionarios, ausencias] = await Promise.all([
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`)
+            ]);
+            if (funcionarios.error || ausencias.error) {
+                console.error("Erro da API:", funcionarios.error || ausencias.error);
+                throw new Error('Uma das abas não foi encontrada ou houve um erro na API.');
+            }
+            const hoje = new Date();
+            const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
+            renderizarPainel(dadosProcessados);
+            atualizarResumo(dadosProcessados);
+            renderizarCalendario(funcionarios, ausencias);
+            setupAbsenceModal(funcionarios);
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console para mais detalhes.</p>';
+        }
+    }
+
     function processarAusencias(funcionarios, ausencias, hoje) {
         return funcionarios.map(func => {
             const ausenciaAtiva = ausencias.find(aus => {
@@ -46,7 +106,6 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
                 return false;
             });
-
             if (ausenciaAtiva) {
                 return { ...func, status_atual: ausenciaAtiva.tipo_ausencia, detalhes_ausencia: `${ausenciaAtiva.data_inicio} - ${ausenciaAtiva.data_fim}` };
             } else {
@@ -54,8 +113,7 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     }
-    
-    // Função para renderizar o painel de funcionários
+
     function renderizarPainel(funcionarios) {
         const grid = document.getElementById('status-grid');
         grid.innerHTML = '';
@@ -65,7 +123,6 @@ document.addEventListener('DOMContentLoaded', function() {
             acc[key].push(func);
             return acc;
         }, {});
-
         for (const nomeGrupo in grupos) {
             const funcionariosDoGrupo = grupos[nomeGrupo];
             const temAusente = funcionariosDoGrupo.some(f => f.status_atual !== 'Presente');
@@ -81,7 +138,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para atualizar o resumo
     function atualizarResumo(funcionarios) {
         const presentes = funcionarios.filter(f => f.status_atual === 'Presente').length;
         const ferias = funcionarios.filter(f => f.status_atual === 'Férias').length;
@@ -91,7 +147,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('count-ausentes').textContent = outrasAusencias;
     }
 
-    // Função para renderizar o calendário
     function renderizarCalendario(funcionarios, ausencias) {
         const calendarEl = document.getElementById('calendar');
         const eventos = [];
@@ -125,8 +180,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         calendar.render();
     }
-    
-    // Função para controlar o modal
+
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
         const openModalBtn = document.querySelector('.register-button');
@@ -134,7 +188,6 @@ document.addEventListener('DOMContentLoaded', function() {
         const employeeSelect = document.getElementById('employee-select');
         const absenceForm = document.getElementById('absence-form');
         const submitButton = absenceForm.querySelector('.submit-button');
-
         employeeSelect.innerHTML = '<option value="">Selecione um funcionário</option>';
         funcionarios.forEach(func => {
             const option = document.createElement('option');
@@ -142,42 +195,31 @@ document.addEventListener('DOMContentLoaded', function() {
             option.textContent = func.nome;
             employeeSelect.appendChild(option);
         });
-
         function fecharModal() {
             modal.style.display = 'none';
             absenceForm.reset();
             submitButton.disabled = false;
             submitButton.textContent = 'Salvar Ausência';
         }
-
         openModalBtn.onclick = function() { modal.style.display = 'block'; }
         closeModalBtn.onclick = fecharModal;
         window.onclick = function(event) { if (event.target == modal) { fecharModal(); } }
-
         absenceForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
-
             const novaAusencia = {
                 id_funcionario: document.getElementById('employee-select').value,
                 tipo_ausencia: document.getElementById('absence-type').value,
                 data_inicio: document.getElementById('start-date').value.split('-').reverse().join('/'),
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
-            
-            console.log('Enviando para a API:', novaAusencia);
-
             try {
-                // <<<--- USANDO A NOVA API PARA SALVAR (POST) ---<<<
                 const response = await fetch(`${NOVA_API_URL}?aba=Ausencias`, {
                     method: 'POST',
                     body: JSON.stringify(novaAusencia),
                 });
-
                 const result = await response.json();
-                console.log('Resposta da API:', result);
-
                 if (result.status === "success") {
                     alert('Ausência registrada com sucesso!');
                     fecharModal();
@@ -196,6 +238,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Inicia o processo
     carregarDados();
 });
