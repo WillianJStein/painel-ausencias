@@ -147,12 +147,12 @@ h3 {
 }
 .status-presente { color: var(--presente-color); }
 .status-férias { color: var(--ferias-color); }
-
 .status-licença { color: var(--ausente-color); }
 
+/* Ajustes para o Calendário */
 #calendar {
-    min-height: 450px; 
-    font-size: 14px; 
+    min-height: 450px;
+    font-size: 14px;
 }
 
 /* Estilos do Modal (Pop-up) */
