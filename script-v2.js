@@ -1,18 +1,33 @@
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Função principal para buscar e renderizar os dados
+    // Função "Telegrama Cantado" (JSONP) para contornar o CORS
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    }
+
+    // Função principal que carrega todos os dados iniciais
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
 
             if (funcionarios.error || ausencias.error || informacoes.error) {
-                console.error("Erro da API:", funcionarios.error || ausencias.error || informacoes.error);
-                throw new Error('Uma das abas não foi encontrada ou houve um erro na API.');
+                throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
             }
 
             const hoje = new Date();
@@ -20,47 +35,67 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarPainel(dadosProcessados);
             atualizarResumo(dadosProcessados);
             renderizarCalendario(funcionarios, ausencias);
-            setupAbsenceModal(funcionarios);
             renderizarInformacoes(informacoes);
+            
+            // Configura os modais DEPOIS que tudo foi renderizado
+            setupAbsenceModal(funcionarios);
             setupInfoModal();
 
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console para mais detalhes.</p>';
+            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
         }
     }
 
-    // O resto do seu código, da função "processarAusencias" em diante, continua igual
-    // ... cole aqui o resto do seu script-v2.js a partir de "function processarAusencias..."
-    // Para garantir, estou incluindo o código completo abaixo.
+    // --- Colar aqui todas as outras funções: processarAusencias, renderizarPainel, atualizarResumo, renderizarCalendario, renderizarInformacoes, setupAbsenceModal, setupInfoModal ---
+    // (O código completo e correto está na caixa abaixo para facilitar)
+
+    // Inicia todo o processo
+    carregarDados();
 });
 
-// ======== CÓDIGO COMPLETO FINAL PARA O script-v2.js (COPIE TUDO ABAIXO) =========
+
+// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js ##########
+// (Copie tudo daqui para baixo e cole no seu arquivo)
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
+
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
+    }
 
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
-                console.error("Erro da API:", funcionarios.error || ausencias.error || informacoes.error);
-                throw new Error('Uma das abas não foi encontrada ou houve um erro na API.');
+                throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
             }
             const hoje = new Date();
             const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
             renderizarPainel(dadosProcessados);
             atualizarResumo(dadosProcessados);
             renderizarCalendario(funcionarios, ausencias);
-            setupAbsenceModal(funcionarios);
             renderizarInformacoes(informacoes);
+            setupAbsenceModal(funcionarios);
             setupInfoModal();
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
-            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console para mais detalhes.</p>';
+            document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
         }
     }
 
@@ -215,7 +250,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         openModalBtn.onclick = function() { modal.style.display = 'block'; }
         closeModalBtn.onclick = fecharModal;
-        window.addEventListener('click', function(event) { if (event.target == modal) { fecharModal(); } });
         absenceForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             submitButton.disabled = true;
@@ -265,7 +299,6 @@ document.addEventListener('DOMContentLoaded', function() {
             submitButton.textContent = 'Salvar Informação';
         }
         closeModalBtn.onclick = fecharModalInfo;
-        window.addEventListener('click', function(event) { if (event.target == modal) { fecharModalInfo(); } });
         infoForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             submitButton.disabled = true;
@@ -297,5 +330,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Configura o fechamento dos modais ao clicar fora
+    window.addEventListener('click', function(event) {
+        const absenceModal = document.getElementById('absence-modal');
+        const infoModal = document.getElementById('info-modal');
+        if (event.target == absenceModal) {
+            absenceModal.style.display = 'none';
+        }
+        if (event.target == infoModal) {
+            infoModal.style.display = 'none';
+        }
+    });
+
     carregarDados();
 });
