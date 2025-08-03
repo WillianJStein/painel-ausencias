@@ -327,3 +327,21 @@ h3 {
 .delete-btn:hover {
     color: var(--ausente-color);
 }
+
+/* Estilos do Display de CUB */
+.cub-display {
+    margin-top: 20px;
+    padding-top: 15px;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+}
+.cub-display h4 {
+    margin: 0 0 5px 0;
+    font-weight: 500;
+    color: var(--text-color);
+}
+.cub-display span {
+    font-size: 24px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
