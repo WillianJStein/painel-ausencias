@@ -7,407 +7,79 @@
     --presente-color: #28a745;
     --ausente-color: #dc3545;
     --ferias-color: #ffc107;
+    --card-background: #fff;
 }
-
 body {
     font-family: 'Roboto', sans-serif;
     background-color: var(--light-gray);
     color: var(--text-color);
     margin: 0;
+    transition: background-color 0.3s, color 0.3s;
 }
-
-.container {
-    display: flex;
-    padding: 20px;
-    gap: 20px;
-}
-
-header {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 15px 30px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-header h1 {
-    margin: 0;
-    font-size: 24px;
-}
-header h1 span {
-    font-weight: 400;
-}
-header h2 {
-    margin: 0;
-    font-weight: 500;
-}
-
-.register-button {
-    background-color: var(--ferias-color);
-    color: var(--text-color);
-    border: none;
-    padding: 10px 20px;
-    border-radius: 5px;
-    cursor: pointer;
-    font-weight: bold;
-}
-
+.container { display: flex; padding: 20px; gap: 20px; }
+header { background-color: var(--primary-color); color: white; padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; }
+header h1 { margin: 0; font-size: 24px; }
+header h1 span { font-weight: 400; }
+header h2 { margin: 0; font-weight: 500; }
+.register-button { background-color: var(--ferias-color); color: var(--text-color); border: none; padding: 10px 20px; border-radius: 5px; cursor: pointer; font-weight: bold; }
 .left-column { flex: 1; }
 .right-column { flex: 3; }
-
-section {
-    background-color: white;
-    border: 1px solid var(--border-color);
-    border-radius: 8px;
-    padding: 20px;
-    margin-bottom: 20px;
-}
-
-h3 {
-    margin-top: 0;
-    border-bottom: 2px solid var(--light-gray);
-    padding-bottom: 10px;
-    margin-bottom: 20px;
-}
-
-/* Resumo */
-.summary-cards {
-    display: flex;
-    justify-content: space-around;
-    text-align: center;
-}
-.summary-card span {
-    font-size: 36px;
-    font-weight: bold;
-    display: block;
-}
-.summary-card p {
-    margin: 0;
-    font-weight: 500;
-}
+section { background-color: var(--card-background); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; margin-bottom: 20px; transition: background-color 0.3s, border-color 0.3s; }
+h3 { margin-top: 0; border-bottom: 2px solid var(--light-gray); padding-bottom: 10px; margin-bottom: 20px; }
+.summary-cards { display: flex; justify-content: space-around; text-align: center; }
+.summary-card span { font-size: 36px; font-weight: bold; display: block; }
+.summary-card p { margin: 0; font-weight: 500; }
 .summary-card.present span { color: var(--presente-color); }
 .summary-card.absent span { color: var(--ausente-color); }
 .summary-card.vacation span { color: var(--ferias-color); }
-.summary-card.scheduled span { color: var(--secondary-color); }
-
-/* Status por Grupo */
-.status-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-}
-
-.team-group {
-    border: 1px solid var(--border-color);
-    border-radius: 5px;
-    padding: 15px;
-}
-
-.team-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 1px solid var(--border-color);
-    padding-bottom: 10px;
-    margin-bottom: 10px;
-}
-.team-header h4 {
-    margin: 0;
-    font-size: 16px;
-}
-
-.status-badge {
-    font-size: 12px;
-    padding: 3px 8px;
-    border-radius: 12px;
-    color: white;
-    font-weight: 500;
-}
+.status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; }
+.team-group { border: 1px solid var(--border-color); border-radius: 5px; padding: 15px; }
+.team-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; margin-bottom: 10px; }
+.team-header h4 { margin: 0; font-size: 16px; }
+.status-badge { font-size: 12px; padding: 3px 8px; border-radius: 12px; color: white; font-weight: 500; }
 .status-badge.ok { background-color: var(--presente-color); }
 .status-badge.warning { background-color: var(--ferias-color); }
-
-.employee {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    align-items: center;
-}
-.employee-name {
-    font-weight: 500;
-}
-.employee-details {
-    font-size: 12px;
-    color: #6c757d;
-}
-
-.employee-status {
-    font-size: 14px;
-    font-weight: bold;
-}
+.employee { display: flex; justify-content: space-between; padding: 8px 0; align-items: center; }
+.employee-name { font-weight: 500; }
+.employee-details { font-size: 12px; color: #6c757d; }
+.employee-status { font-size: 14px; font-weight: bold; }
 .status-presente { color: var(--presente-color); }
-.status-férias { color: var(--ferias-color); }
-.status-licença { color: var(--ausente-color); }
-
-/* Ajustes para o Calendário */
-#calendar {
-    min-height: 450px;
-    font-size: 14px;
-}
-
-/* Estilos do Modal (Pop-up) */
-.modal {
-    display: none; /* Escondido por padrão */
-    position: fixed;
-    z-index: 1000;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: auto;
-    background-color: rgba(0,0,0,0.5);
-}
-
-.modal-content {
-    background-color: #fefefe;
-    margin: 10% auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    max-width: 500px;
-    border-radius: 8px;
-    position: relative;
-}
-
-.close-button {
-    color: #aaa;
-    float: right;
-    font-size: 28px;
-    font-weight: bold;
-}
-
-.close-button:hover,
-.close-button:focus {
-    color: black;
-    text-decoration: none;
-    cursor: pointer;
-}
-
-.form-group {
-    margin-bottom: 15px;
-}
-
-.form-group label {
-    display: block;
-    margin-bottom: 5px;
-}
-
-.form-group input,
-.form-group select {
-    width: calc(100% - 20px);
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-}
-
-.submit-button {
-    background-color: var(--primary-color);
-    color: white;
-    padding: 12px 20px;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    width: 100%;
-    font-size: 16px;
-}
-
-.submit-button:hover {
-    background-color: #004494;
-}
-
+.status-férias, .status-ferias { color: var(--ferias-color); }
+.status-licença, .status-licenca, .status-atestado { color: var(--ausente-color); }
+#calendar { min-height: 450px; font-size: 14px; }
+.modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.5); }
+.modal-content { background-color: var(--card-background); margin: 10% auto; padding: 20px; border: 1px solid #888; width: 80%; max-width: 500px; border-radius: 8px; position: relative; }
+.close-button { color: #aaa; float: right; font-size: 28px; font-weight: bold; }
+.close-button:hover, .close-button:focus { color: var(--text-color); text-decoration: none; cursor: pointer; }
+.form-group { margin-bottom: 15px; }
+.form-group label { display: block; margin-bottom: 5px; }
+.form-group input, .form-group select, .form-group textarea { width: calc(100% - 22px); padding: 10px; border: 1px solid var(--border-color); border-radius: 4px; background-color: var(--light-gray); color: var(--text-color); }
+.submit-button { background-color: var(--primary-color); color: white; padding: 12px 20px; border: none; border-radius: 5px; cursor: pointer; width: 100%; font-size: 16px; }
+.submit-button:hover { opacity: 0.9; }
 .status-ferias-agendada { color: #007bff; }
-
-/* Estilos do Quadro de Informações */
-.info-card {
-    background-color: #fff;
-    border: 1px solid var(--border-color);
-    border-left: 5px solid var(--secondary-color);
-    padding: 15px;
-    margin-bottom: 10px;
-    border-radius: 5px;
-}
-
-.info-card.destaque {
-    background-color: #fff3cd;
-    border-left-color: var(--ferias-color);
-}
-
-.info-card p {
-    margin-top: 0;
-    margin-bottom: 5px;
-}
-
-.info-card .info-date {
-    font-size: 12px;
-    color: #6c757d;
-    text-align: right;
-}
-
-/* Estilos para o cabeçalho da seção com botão */
-.section-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    border-bottom: 2px solid var(--light-gray);
-    margin-bottom: 20px;
-}
-
-.section-header h3 {
-    margin: 0;
-    border: none; /* Remove a borda do h3 que agora está no container */
-}
-
-.add-button {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    border-radius: 50%;
-    width: 30px;
-    height: 30px;
-    font-size: 20px;
-    font-weight: bold;
-    cursor: pointer;
-    line-height: 30px;
-}
-
-/* Estilos para o formulário de informações */
-#info-message {
-    width: calc(100% - 22px);
-    padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    font-family: 'Roboto', sans-serif;
-}
-
-.checkbox-group {
-    display: flex;
-    align-items: center;
-}
-
-.checkbox-group input {
-    width: auto;
-    margin-right: 10px;
-}
-
-/* Estilos para os botões de ação do card de informação */
-.info-card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: flex-start;
-}
-
-.info-card-actions {
-    display: flex;
-    gap: 8px;
-}
-
-.action-btn {
-    background: none;
-    border: none;
-    cursor: pointer;
-    font-size: 16px;
-    padding: 5px;
-    color: #6c757d;
-}
-
-.action-btn:hover {
-    color: var(--primary-color);
-}
-
-.delete-btn:hover {
-    color: var(--ausente-color);
-}
-
-/* Estilos do Display de CUB */
-.cub-display {
-    margin-top: 20px;
-    padding-top: 15px;
-    border-top: 1px solid var(--border-color);
-    text-align: center;
-}
-.cub-display h4 {
-    margin: 0 0 5px 0;
-    font-weight: 500;
-    color: var(--text-color);
-}
-.cub-display span {
-    font-size: 24px;
-    font-weight: bold;
-    color: var(--primary-color);
-}
-
-/* Estilos do botão de Dark Mode (Otimizado para SVG) */
-.header-buttons {
-    display: flex;
-    align-items: center;
-    gap: 15px;
-}
-
-.dark-mode-button {
-    background: none;
-    border: 2px solid var(--ferias-color);
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    cursor: pointer;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0;
-    transition: background-color 0.3s;
-}
-
-.dark-mode-button svg {
-    fill: var(--ferias-color); /* Pinta o ícone */
-    transition: fill 0.3s;
-}
-
-.dark-mode-button:hover {
-    background-color: var(--ferias-color);
-}
-
-.dark-mode-button:hover svg {
-    fill: var(--text-color); /* Pinta o ícone no hover */
-}
-
-/* Ajuste da cor do ícone no modo escuro */
-body.dark-mode .dark-mode-button:hover svg {
-    fill: #121212; /* Cor do ícone no hover do modo escuro */
-}
-
-
-/* --- A MÁGICA DO DARK MODE --- */
-
-body.dark-mode {
-    /* Redefinimos as variáveis de cor quando o body tem a classe .dark-mode */
-    --primary-color: #0d6efd; /* Um azul um pouco mais vibrante para o escuro */
-    --light-gray: #121212; /* Fundo principal super escuro */
-    --border-color: #444;
-    --text-color: #e8e6e3; /* Texto principal quase branco */
-    
-    /* Cor de fundo dos cards */
-    --card-background: #1e1e1e;
-}
-
-/* Ajustes específicos para elementos no modo escuro */
-body.dark-mode section {
-    background-color: var(--card-background);
-}
-
-body.dark-mode .modal-content {
-    background-color: #2a2a2a;
-}
-
-body.dark-mode .info-card.destaque {
-    background-color: #3b310a;
-}
+.section-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid var(--light-gray); margin-bottom: 20px; }
+.section-header h3 { margin: 0; border: none; }
+.add-button { background-color: var(--primary-color); color: white; border: none; border-radius: 50%; width: 30px; height: 30px; font-size: 20px; font-weight: bold; cursor: pointer; line-height: 30px; }
+.info-card { background-color: var(--card-background); border: 1px solid var(--border-color); border-left: 5px solid var(--secondary-color); padding: 15px; margin-bottom: 10px; border-radius: 5px; }
+.info-card.destaque { background-color: #fff3cd; border-left-color: var(--ferias-color); }
+.info-card p { margin: 0 0 5px 0; }
+.info-card .info-date { font-size: 12px; color: #6c757d; text-align: right; }
+.info-card-header { display: flex; justify-content: space-between; align-items: flex-start; }
+.info-card-actions { display: flex; gap: 8px; }
+.action-btn { background: none; border: none; cursor: pointer; padding: 5px; }
+.action-btn svg { fill: #6c757d; }
+.action-btn:hover svg { fill: var(--primary-color); }
+.delete-btn:hover svg { fill: var(--ausente-color); }
+.checkbox-group { display: flex; align-items: center; }
+.checkbox-group input { width: auto; margin-right: 10px; }
+.cub-display { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border-color); text-align: center; }
+.cub-display h4 { margin: 0 0 5px 0; font-weight: 500; color: var(--text-color); }
+.cub-display span { font-size: 24px; font-weight: bold; color: var(--primary-color); }
+.header-buttons { display: flex; align-items: center; gap: 15px; }
+.dark-mode-button { background: none; border: 2px solid var(--ferias-color); width: 40px; height: 40px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; padding: 0; transition: background-color 0.3s; }
+.dark-mode-button svg { fill: var(--ferias-color); transition: fill 0.3s; }
+.dark-mode-button:hover { background-color: var(--ferias-color); }
+.dark-mode-button:hover svg { fill: var(--text-color); }
+body.dark-mode { --primary-color: #0d6efd; --light-gray: #121212; --border-color: #444; --text-color: #e8e6e3; --card-background: #1e1e1e; }
+body.dark-mode .info-card.destaque { background-color: #3b310a; }
+body.dark-mode .dark-mode-button:hover svg { fill: #121212; }
