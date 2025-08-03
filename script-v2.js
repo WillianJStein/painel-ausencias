@@ -1,8 +1,8 @@
-// ########## CÓDIGO COMPLETO E FINAL UNIFICADO ##########
+// ########## CÓDIGO FINAL, DEFINITIVO E CORRIGIDO ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Técnica JSONP ("Telegrama") para LER dados
+    // Técnica JSONP ("Telegrama") para LER dados (ignora CORS)
     function fetchJSONP(url) {
         return new Promise((resolve, reject) => {
             const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
@@ -21,16 +21,17 @@ document.addEventListener('DOMContentLoaded', function() {
     // Técnica FETCH ("Carta") para ESCREVER dados
     async function postData(aba, dados, acao = 'adicionar') {
         const payload = { aba: aba, acao: acao, dados: dados };
+        // Este fetch é "fire and forget" devido às limitações do no-cors
         await fetch(NOVA_API_URL, {
             method: 'POST',
             mode: 'no-cors',
             redirect: 'follow',
             body: JSON.stringify(payload),
         });
+        // Assumimos sucesso, já que não podemos ler a resposta
         return { status: "success" }; 
     }
 
-    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
@@ -48,14 +49,13 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarCalendario(funcionarios, ausencias);
             renderizarInformacoes(informacoes);
             setupAbsenceModal(funcionarios);
-            setupInfoModal(); // Adicionada a chamada que faltava
+            setupInfoModal();
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
         }
     }
 
-    // Função para processar os status de cada funcionário
     function processarAusencias(funcionarios, ausencias, hoje) {
         const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
         return funcionarios.map(func => {
@@ -85,7 +85,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para renderizar os cards de status
     function renderizarPainel(funcionarios) {
         const grid = document.getElementById('status-grid');
         grid.innerHTML = '';
@@ -110,7 +109,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para renderizar o resumo
     function atualizarResumo(funcionarios) {
         let presentes = 0;
         let ferias = 0;
@@ -129,7 +127,6 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('count-ausentes').textContent = ausentes;
     }
 
-    // Função para renderizar o calendário
     function renderizarCalendario(funcionarios, ausencias) {
         const calendarEl = document.getElementById('calendar');
         const coresDosEventos = { 'Atestado': '#dc3545', 'Férias': '#fd7e14', 'Licença': '#6f42c1' };
@@ -163,7 +160,6 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     }
     
-    // Função para renderizar o quadro de informações
     function renderizarInformacoes(informacoes) {
         const board = document.getElementById('info-board');
         board.innerHTML = '';
@@ -191,7 +187,6 @@ document.addEventListener('DOMContentLoaded', function() {
         addInfoEventListeners(informacoes);
     }
     
-    // Função para adicionar lógica aos botões de editar/excluir
     function addInfoEventListeners(informacoes) {
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', async function(event) {
@@ -201,7 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     try {
                         const result = await postData('Informacoes', { id: infoId }, 'excluir');
                         if (result.status === "success") {
-                            alert('Informação excluída com sucesso!');
+                            alert('Informação excluída com sucesso! A página será atualizada.');
                             location.reload();
                         } else { alert('Erro ao excluir.'); }
                     } catch (error) { alert('Erro de rede ao tentar excluir.'); }
@@ -215,7 +210,6 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para configurar o modal de ausências
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
         const openModalBtn = document.querySelector('.register-button');
@@ -251,7 +245,7 @@ document.addEventListener('DOMContentLoaded', function() {
             try {
                 const result = await postData('Ausencias', novaAusencia, 'adicionar');
                 if (result.status === "success") {
-                    alert('Ausência registrada com sucesso!');
+                    alert('Ausência registrada com sucesso! A página será atualizada.');
                     location.reload();
                 } else {
                     alert('Erro ao registrar ausência.');
@@ -267,14 +261,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Função para configurar o modal de informações
     function setupInfoModal() {
         const modal = document.getElementById('info-modal');
         const openModalBtn = document.getElementById('add-info-button');
         const closeModalBtn = modal.querySelector('.close-button');
         const infoForm = document.getElementById('info-form');
         const submitButton = infoForm.querySelector('.submit-button');
-        openModalBtn.onclick = function() { modal.style.display = 'block'; }
+        openModalBtn.onclick = function() {
+            document.getElementById('info-id').value = '';
+            infoForm.reset();
+            modal.style.display = 'block';
+        }
         function fecharModalInfo() {
             modal.style.display = 'none';
             infoForm.reset();
@@ -286,14 +283,17 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault();
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
+            const infoId = document.getElementById('info-id').value;
             const novaInfo = {
+                id: infoId,
                 mensagem: document.getElementById('info-message').value,
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
             try {
-                const result = await postData('Informacoes', novaInfo, 'adicionar');
+                const acao = infoId ? 'editar' : 'adicionar';
+                const result = await postData('Informacoes', novaInfo, acao);
                 if (result.status === "success") {
-                    alert('Informação registrada com sucesso!');
+                    alert('Informação registrada com sucesso! A página será atualizada.');
                     location.reload();
                 } else {
                     alert('Erro ao registrar informação.');
