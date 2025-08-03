@@ -11,20 +11,19 @@
 </head>
 <body>
     <header>
-    <div class="logo">
+        <div class="logo">
+            <h1>PALHOÇA <span>PREFEITURA</span></h1>
         </div>
-    <h2>Quadro de Informações - Prefeitura de Palhoça</h2>
-
-    <div class="header-buttons">
-        <button id="dark-mode-toggle" class="dark-mode-button" title="Alternar modo escuro">🌙</button>
-
-        <button id="dark-mode-toggle" class="dark-mode-button" title="Alternar modo escuro">
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM12 20.5V3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5Z" />
-    </svg>
-</button>
-    </div>
-</header>
+        <h2>Quadro de Informações - Prefeitura de Palhoça</h2>
+        <div class="header-buttons">
+            <button id="dark-mode-toggle" class="dark-mode-button" title="Alternar modo escuro">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22ZM12 20.5V3.5C16.6944 3.5 20.5 7.30558 20.5 12C20.5 16.6944 16.6944 20.5 12 20.5Z" />
+                </svg>
+            </button>
+            <button class="register-button">Registrar Ausência</button>
+        </div>
+    </header>
 
     <main class="container">
         <div class="left-column">
@@ -49,19 +48,16 @@
                     <span id="cub-value">R$ 0,00</span>
                 </div>
             </section>
-
             <section class="calendar-section">
                 <h3>Calendário de Ausências</h3>
                 <div id="calendar"></div>
             </section>
         </div>
-
         <div class="right-column">
             <section class="status-section">
                 <h3>Status por Grupo e Turno</h3>
                 <div id="status-grid" class="status-grid"></div>
             </section>
-
             <section class="info-section">
                 <div class="section-header">
                     <h3>Quadro de Informações</h3>
@@ -76,56 +72,18 @@
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Registrar Nova Ausência</h2>
-            <form id="absence-form">
-                <div class="form-group">
-                    <label for="employee-select">Funcionário:</label>
-                    <select id="employee-select" name="employee-id" required></select>
-                </div>
-                <div class="form-group">
-                    <label for="absence-type">Tipo de Ausência:</label>
-                    <select id="absence-type" name="absence-type" required>
-                        <option value="Férias">Férias</option>
-                        <option value="Licença">Licença</option>
-                        <option value="Atestado">Atestado</option>
-                        <option value="Outro">Outro</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="start-date">Data de Início:</label>
-                    <input type="date" id="start-date" name="start-date" required>
-                </div>
-                <div class="form-group">
-                    <label for="end-date">Data de Fim:</label>
-                    <input type="date" id="end-date" name="end-date" required>
-                </div>
-                <button type="submit" class="submit-button">Salvar Ausência</button>
-            </form>
+            <form id="absence-form"></form>
         </div>
     </div>
-
     <div id="info-modal" class="modal">
         <div class="modal-content">
             <span class="close-button">&times;</span>
             <h2>Adicionar/Editar Informação</h2>
-            <form id="info-form">
-                <input type="hidden" id="info-id" name="info-id">
-                <div class="form-group">
-                    <label for="info-message">Mensagem:</label>
-                    <textarea id="info-message" name="info-message" rows="4" required></textarea>
-                </div>
-                <div class="form-group checkbox-group">
-                    <input type="checkbox" id="info-highlight" name="info-highlight">
-                    <label for="info-highlight">Marcar como destaque?</label>
-                </div>
-                <button type="submit" class="submit-button">Salvar Informação</button>
-            </form>
+            <form id="info-form"></form>
         </div>
     </div>
 
     <script src='fullcalendar.min.js'></script>
     <script src="script-v2.js?v=2"></script>
-
 </body>
 </html>
-
-
