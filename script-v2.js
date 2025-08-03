@@ -1,4 +1,4 @@
-// ########## CÓDIGO FINAL, VITORIOSO E CORRIGIDO DE VERDADE ##########
+// ########## CÓDIGO FINAL E DEFINITIVO ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
@@ -30,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function() {
         return { status: "success" }; 
     }
 
-    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
@@ -48,7 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarCalendario(funcionarios, ausencias);
             renderizarInformacoes(informacoes);
             setupAbsenceModal(funcionarios);
-            setupInfoModal(informacoes); // Passando 'informacoes' para a função
+            setupInfoModal(informacoes);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
@@ -269,7 +268,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function setupInfoModal(informacoes) { // Adicionei 'informacoes' aqui
+    function setupInfoModal(informacoes) { // Adicionado 'informacoes' que estava faltando
         const modal = document.getElementById('info-modal');
         const openModalBtn = document.getElementById('add-info-button');
         const closeModalBtn = modal.querySelector('.close-button');
