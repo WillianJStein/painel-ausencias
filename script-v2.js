@@ -1,43 +1,30 @@
-// ########## CÓDIGO FINAL E VITORIOSO (MISTO) ##########
+// ########## CÓDIGO FINAL E VITORIOSO ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Técnica JSONP ("Telegrama") para LER dados (ignora CORS)
-    function fetchJSONP(url) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                resolve(data);
-            };
-            const script = document.createElement('script');
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
+    // Funções de comunicação com a API (agora usando fetch para tudo)
+    async function getData(aba) {
+        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
+        if (!response.ok) throw new Error(`Erro de rede ao buscar: ${aba}`);
+        return response.json();
     }
-    
-    // Técnica FETCH ("Carta") para ESCREVER dados
-// Técnica FETCH ("Carta") para ESCREVER dados (versão com AÇÕES)
-async function postData(aba, dados, acao = 'adicionar') { // Adicionamos o parâmetro 'acao'
-    const response = await fetch(NOVA_API_URL, {
-        method: 'POST',
-        mode: 'no-cors',
-        redirect: 'follow',
-        body: JSON.stringify({ aba: aba, acao: acao, dados: dados }), // Enviamos a ação
-    });
-    // Como usamos no-cors, não podemos ler a resposta, então precisamos confiar e recarregar
-    // Para simplificar, vamos assumir sucesso e recarregar a página
-    return { status: "success" }; 
-}
+    async function postData(payload) {
+        const response = await fetch(NOVA_API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            body: JSON.stringify(payload),
+        });
+        if (!response.ok) throw new Error(`Erro de rede ao enviar dados`);
+        return response.json();
+    }
 
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
+                getData('Funcionarios'),
+                getData('Ausencias'),
+                getData('Informacoes')
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -160,96 +147,66 @@ async function postData(aba, dados, acao = 'adicionar') { // Adicionamos o parâ
         calendar.render();
     }
     
-// Função para desenhar o Quadro de Informações (COM ÍCONES SVG PERSONALIZADOS)
-function renderizarInformacoes(informacoes) {
-    const board = document.getElementById('info-board');
-    board.innerHTML = ''; 
-
-    if (!informacoes || informacoes.length === 0) {
-        board.innerHTML = '<p>Nenhuma informação no momento.</p>';
-        return;
+    function renderizarInformacoes(informacoes) {
+        const board = document.getElementById('info-board');
+        board.innerHTML = '';
+        if (!informacoes || informacoes.length === 0) {
+            board.innerHTML = '<p>Nenhuma informação no momento.</p>';
+            return;
+        }
+        informacoes.sort((a, b) => (b.destaque === 'TRUE' ? 1 : -1));
+        informacoes.forEach(info => {
+            if (info.mensagem) {
+                const card = document.createElement('div');
+                card.className = 'info-card';
+                card.dataset.infoId = info.id;
+                if (info.destaque && info.destaque.toString().toUpperCase() === 'TRUE') {
+                    card.classList.add('destaque');
+                }
+                let cardHTML = `<div class="info-card-header"><p>${info.mensagem}</p><div class="info-card-actions"><button class="action-btn edit-btn" title="Editar">✏️</button><button class="action-btn delete-btn" title="Excluir">🗑️</button></div></div>`;
+                if (info.data) {
+                    cardHTML += `<div class="info-date">${new Date(info.data).toLocaleDateString()}</div>`;
+                }
+                card.innerHTML = cardHTML;
+                board.appendChild(card);
+            }
+        });
+        addInfoEventListeners(informacoes);
     }
 
-    informacoes.sort((a, b) => {
-        if (a.destaque === b.destaque) return 0;
-        return a.destaque === 'TRUE' ? -1 : 1;
-    });
-
-    informacoes.forEach(info => {
-        if (info.mensagem) {
-            const card = document.createElement('div');
-            card.className = 'info-card';
-            card.dataset.infoId = info.id; 
-
-            if (info.destaque && info.destaque.toString().toUpperCase() === 'TRUE') {
-                card.classList.add('destaque');
-            }
-            
-            // Aqui estão os novos botões com os SVGs que escolhemos
-            let cardHTML = `
-                <div class="info-card-header">
-                    <p>${info.mensagem}</p>
-                    <div class="info-card-actions">
-                        <button class="action-btn edit-btn" title="Editar">
-                            <svg viewBox="0 0 32 32" fill="currentColor" style="width: 18px; height: 18px;">
-                                <path d="M25.384,11.987a.993.993,0,0,1-.707-.293L20.434,7.452a1,1,0,0,1,0-1.414l2.122-2.121a3.07,3.07,0,0,1,4.242,0l1.414,1.414a3,3,0,0,1,0,4.242l-2.122,2.121A.993.993,0,0,1,25.384,11.987ZM22.555,6.745l2.829,2.828L26.8,8.159a1,1,0,0,0,0-1.414L25.384,5.331a1.023,1.023,0,0,0-1.414,0Z"></path>
-                                <path d="M11.9,22.221a2,2,0,0,1-1.933-2.487l.875-3.5a3.02,3.02,0,0,1,.788-1.393l8.8-8.8a1,1,0,0,1,1.414,0l4.243,4.242a1,1,0,0,1,0,1.414l-8.8,8.8a3,3,0,0,1-1.393.79h0l-3.5.875A2.027,2.027,0,0,1,11.9,22.221Zm3.752-1.907h0ZM21.141,8.159l-8.094,8.093a1,1,0,0,0-.262.465l-.876,3.5,3.5-.876a1,1,0,0,0,.464-.263l8.094-8.094Z"></path>
-                                <path d="M22,29H8a5.006,5.006,0,0,1-5-5V10A5.006,5.006,0,0,1,8,5h9.64a1,1,0,0,1,0,2H8a3,3,0,0,0-3,3V24a3,3,0,0,0,3,3H22a3,3,0,0,0,3-3V14.61a1,1,0,0,1,2,0V24A5.006,5.006,0,0,1,22,29Z"></path>
-                            </svg>
-                        </button>
-                        <button class="action-btn delete-btn" title="Excluir">
-                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
-                                <path d="M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4Z"></path>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            `;
-
-            if (info.data) {
-                cardHTML += `<div class="info-date">${new Date(info.data).toLocaleDateString()}</div>`;
-            }
-            
-            card.innerHTML = cardHTML;
-            board.appendChild(card);
-        }
-    });
-
-    addInfoEventListeners();
-}
-
-// Esta função adiciona a lógica aos botões de Editar e Excluir
-function addInfoEventListeners() {
-    // Ação para os botões de DELETAR
-    document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', async function(event) {
-            const card = event.target.closest('.info-card');
-            const infoId = card.dataset.infoId;
-
-            if (confirm('Tem certeza de que deseja excluir esta informação?')) {
-                try {
-                    const result = await postData('Informacoes', { id: infoId }, 'excluir');
-                    if (result.status === "success") {
-                        alert('Informação excluída com sucesso!');
-                        location.reload();
-                    } else {
-                        alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
-                    }
-                } catch (error) {
-                    alert('Erro de rede ao tentar excluir.');
+    function addInfoEventListeners(informacoes) {
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async function(event) {
+                const card = event.target.closest('.info-card');
+                const infoId = card.dataset.infoId;
+                if (confirm('Tem certeza de que deseja excluir esta informação?')) {
+                    try {
+                        const result = await postData({ aba: 'Informacoes', acao: 'excluir', dados: { id: infoId } });
+                        if (result.status === "success") {
+                            alert('Informação excluída com sucesso!');
+                            location.reload();
+                        } else {
+                            alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
+                        }
+                    } catch (error) { alert('Erro de rede ao tentar excluir.'); }
                 }
-            }
+            });
         });
-    });
-
-    // Ação para os botões de EDITAR
-    document.querySelectorAll('.edit-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            // Lógica para editar virá aqui
-            alert('A função EDITAR virá no próximo episódio!');
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function(event) {
+                const card = event.target.closest('.info-card');
+                const infoId = card.dataset.infoId;
+                const infoParaEditar = informacoes.find(info => info.id == infoId);
+                if (infoParaEditar) {
+                    const modal = document.getElementById('info-modal');
+                    document.getElementById('info-id').value = infoParaEditar.id;
+                    document.getElementById('info-message').value = infoParaEditar.mensagem;
+                    document.getElementById('info-highlight').checked = (infoParaEditar.destaque && infoParaEditar.destaque.toString().toUpperCase() === 'TRUE');
+                    modal.style.display = 'block';
+                }
+            });
         });
-    });
-}
+    }
 
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
@@ -284,12 +241,12 @@ function addInfoEventListeners() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                const result = await postData('Ausencias', novaAusencia);
+                const result = await postData({ aba: 'Ausencias', acao: 'adicionar', dados: novaAusencia });
                 if (result.status === "success") {
                     alert('Ausência registrada com sucesso!');
                     location.reload();
                 } else {
-                    alert('Erro ao registrar ausência.');
+                    alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
                     submitButton.disabled = false;
                     submitButton.textContent = 'Salvar Ausência';
                 }
@@ -308,7 +265,11 @@ function addInfoEventListeners() {
         const closeModalBtn = modal.querySelector('.close-button');
         const infoForm = document.getElementById('info-form');
         const submitButton = infoForm.querySelector('.submit-button');
-        openModalBtn.onclick = function() { modal.style.display = 'block'; }
+        openModalBtn.onclick = function() {
+            document.getElementById('info-id').value = ''; // Limpa o ID para garantir que é um novo registro
+            infoForm.reset();
+            modal.style.display = 'block';
+        }
         function fecharModalInfo() {
             modal.style.display = 'none';
             infoForm.reset();
@@ -320,17 +281,20 @@ function addInfoEventListeners() {
             event.preventDefault();
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
+            const infoId = document.getElementById('info-id').value;
             const novaInfo = {
+                id: infoId, // Envia o ID, que pode estar vazio (novo) ou preenchido (edição)
                 mensagem: document.getElementById('info-message').value,
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
             try {
-                const result = await postData('Informacoes', novaInfo);
+                const acao = infoId ? 'editar' : 'adicionar'; // Decide a ação com base no ID
+                const result = await postData({ aba: 'Informacoes', acao: acao, dados: novaInfo });
                 if (result.status === "success") {
                     alert('Informação registrada com sucesso!');
                     location.reload();
                 } else {
-                    alert('Erro ao registrar informação.');
+                    alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
                     submitButton.disabled = false;
                     submitButton.textContent = 'Salvar Informação';
                 }
@@ -357,6 +321,3 @@ function addInfoEventListeners() {
 
     carregarDados();
 });
-
-
-
