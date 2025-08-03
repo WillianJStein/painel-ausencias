@@ -299,3 +299,31 @@ h3 {
     margin-right: 10px;
 }
 
+/* Estilos para os botões de ação do card de informação */
+.info-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.info-card-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.action-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 5px;
+    color: #6c757d;
+}
+
+.action-btn:hover {
+    color: var(--primary-color);
+}
+
+.delete-btn:hover {
+    color: var(--ausente-color);
+}
