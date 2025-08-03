@@ -19,18 +19,18 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Técnica FETCH ("Carta") para ESCREVER dados
-    async function postData(aba, dados) {
-        // Truque final: enviamos como text/plain para evitar o bloqueio CORS em POSTs
-        const response = await fetch(NOVA_API_URL, {
-            method: 'POST',
-            mode: 'no-cors', // Importante para o POST no Apps Script
-            redirect: 'follow',
-            body: JSON.stringify({ aba: aba, dados: dados }),
-        });
-        // Como usamos no-cors, não podemos ler a resposta, então apenas assumimos sucesso.
-        // O Apps Script vai processar em segundo plano.
-        return { status: "success" }; 
-    }
+// Técnica FETCH ("Carta") para ESCREVER dados (versão com AÇÕES)
+async function postData(aba, dados, acao = 'adicionar') { // Adicionamos o parâmetro 'acao'
+    const response = await fetch(NOVA_API_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        redirect: 'follow',
+        body: JSON.stringify({ aba: aba, acao: acao, dados: dados }), // Enviamos a ação
+    });
+    // Como usamos no-cors, não podemos ler a resposta, então precisamos confiar e recarregar
+    // Para simplificar, vamos assumir sucesso e recarregar a página
+    return { status: "success" }; 
+}
 
     async function carregarDados() {
         try {
@@ -215,17 +215,30 @@ function renderizarInformacoes(informacoes) {
         }
     });
 
-    // Esta parte é nova e importante: precisamos adicionar os 'event listeners' aos novos botões
     addInfoEventListeners();
 }
 
-// Esta função inteira é nova!
+// Esta função adiciona a lógica aos botões de Editar e Excluir
 function addInfoEventListeners() {
     // Ação para os botões de DELETAR
     document.querySelectorAll('.delete-btn').forEach(button => {
-        button.addEventListener('click', function() {
-            // Lógica para deletar virá aqui
-            alert('A função DELETAR virá no próximo episódio!');
+        button.addEventListener('click', async function(event) {
+            const card = event.target.closest('.info-card');
+            const infoId = card.dataset.infoId;
+
+            if (confirm('Tem certeza de que deseja excluir esta informação?')) {
+                try {
+                    const result = await postData('Informacoes', { id: infoId }, 'excluir');
+                    if (result.status === "success") {
+                        alert('Informação excluída com sucesso!');
+                        location.reload();
+                    } else {
+                        alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
+                    }
+                } catch (error) {
+                    alert('Erro de rede ao tentar excluir.');
+                }
+            }
         });
     });
 
@@ -344,5 +357,6 @@ function addInfoEventListeners() {
 
     carregarDados();
 });
+
 
 
