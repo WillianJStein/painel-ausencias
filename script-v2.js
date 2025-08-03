@@ -2,6 +2,7 @@
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
+    // Técnica JSONP ("Telegrama") para LER dados (ignora CORS)
     function fetchJSONP(url) {
         return new Promise((resolve, reject) => {
             const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
@@ -17,6 +18,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
+    // Técnica FETCH ("Carta") para ESCREVER dados
     async function postData(aba, dados, acao = 'adicionar') {
         const payload = { aba: aba, acao: acao, dados: dados };
         await fetch(NOVA_API_URL, {
@@ -30,14 +32,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
     async function carregarDados() {
         try {
-            const [funcionarios, ausencias, informacoes] = await Promise.all([
+            const [funcionarios, ausencias, informacoes, config] = await Promise.all([
                 fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
                 fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
                 fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`),
                 fetchJSONP(`${NOVA_API_URL}?aba=Config`)
             ]);
-            if (funcionarios.error || ausencias.error || informacoes.error) {
-                throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
+            if (funcionarios.error || ausencias.error || informacoes.error || config.error) {
+                throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error || config.error));
             }
             const hoje = new Date();
             const dadosProcessados = processarAusencias(funcionarios, ausencias, hoje);
@@ -190,15 +192,15 @@ document.addEventListener('DOMContentLoaded', function() {
         addInfoEventListeners(informacoes);
     }
 
-    // Função para renderizar as configurações (CUB)
-function renderizarConfig(config) {
-    const cubData = config.find(item => item.chave === 'cub');
-    if (cubData && cubData.valor) {
-        const cubValue = parseFloat(cubData.valor);
-        const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        document.getElementById('cub-value').textContent = formattedValue;
+    function renderizarConfig(config) {
+        const cubData = config.find(item => item.chave === 'cub');
+        if (cubData && cubData.valor) {
+            const cubValue = parseFloat(cubData.valor);
+            const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('cub-value').textContent = formattedValue;
+        }
     }
-}
+    
     function addInfoEventListeners(informacoes) {
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', async function(event) {
@@ -344,4 +346,3 @@ function renderizarConfig(config) {
 
     carregarDados();
 });
-
