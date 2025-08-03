@@ -160,30 +160,53 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     }
     
-    function renderizarInformacoes(informacoes) {
-        const board = document.getElementById('info-board');
-        board.innerHTML = '';
-        if (!informacoes || informacoes.length === 0) {
-            board.innerHTML = '<p>Nenhuma informação no momento.</p>';
-            return;
-        }
-        informacoes.sort((a, b) => (b.destaque === 'TRUE' ? 1 : -1));
-        informacoes.forEach(info => {
-            if (info.mensagem) {
-                const card = document.createElement('div');
-                card.className = 'info-card';
-                if (info.destaque && info.destaque.toString().toUpperCase() === 'TRUE') {
-                    card.classList.add('destaque');
-                }
-                let cardHTML = `<p>${info.mensagem}</p>`;
-                if (info.data) {
-                    cardHTML += `<div class="info-date">${new Date(info.data).toLocaleDateString()}</div>`;
-                }
-                card.innerHTML = cardHTML;
-                board.appendChild(card);
-            }
-        });
+    // Função para desenhar o Quadro de Informações (COM BOTÕES DE AÇÃO)
+function renderizarInformacoes(informacoes) {
+    const board = document.getElementById('info-board');
+    board.innerHTML = ''; 
+
+    if (!informacoes || informacoes.length === 0) {
+        board.innerHTML = '<p>Nenhuma informação no momento.</p>';
+        return;
     }
+
+    // Ordena para que os destaques apareçam primeiro
+    informacoes.sort((a, b) => {
+        if (a.destaque === b.destaque) return 0;
+        return a.destaque === 'TRUE' ? -1 : 1;
+    });
+
+    informacoes.forEach(info => {
+        if (info.mensagem) {
+            const card = document.createElement('div');
+            card.className = 'info-card';
+            // Adiciona um atributo de dados para sabermos o ID da informação
+            card.dataset.infoId = info.id; 
+
+            if (info.destaque && info.destaque.toString().toUpperCase() === 'TRUE') {
+                card.classList.add('destaque');
+            }
+            
+            // Usamos o novo container .info-card-header para alinhar o texto e os botões
+            let cardHTML = `
+                <div class="info-card-header">
+                    <p>${info.mensagem}</p>
+                    <div class="info-card-actions">
+                        <button class="action-btn edit-btn" title="Editar">✏️</button>
+                        <button class="action-btn delete-btn" title="Excluir">🗑️</button>
+                    </div>
+                </div>
+            `;
+
+            if (info.data) {
+                cardHTML += `<div class="info-date">${new Date(info.data).toLocaleDateString()}</div>`;
+            }
+            
+            card.innerHTML = cardHTML;
+            board.appendChild(card);
+        }
+    });
+}
 
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
@@ -291,3 +314,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     carregarDados();
 });
+
