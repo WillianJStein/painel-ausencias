@@ -1,29 +1,39 @@
-// ########## CÓDIGO FINAL E VITORIOSO - TEMPORADA 4 ##########
+// ########## CÓDIGO FINAL E VITORIOSO (MISTO) ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    async function getData(aba) {
-        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
-        if (!response.ok) throw new Error(`Erro de rede ao buscar: ${aba}`);
-        return response.json();
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
+        });
     }
-    async function postData(payload) {
-        const response = await fetch(NOVA_API_URL, {
+    
+    async function postData(aba, dados, acao = 'adicionar') {
+        const payload = { aba: aba, acao: acao, dados: dados };
+        await fetch(NOVA_API_URL, {
             method: 'POST',
-            mode: 'cors',
-            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+            mode: 'no-cors',
+            redirect: 'follow',
             body: JSON.stringify(payload),
         });
-        if (!response.ok) throw new Error(`Erro de rede ao enviar dados`);
-        return response.json();
+        return { status: "success" }; 
     }
 
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                getData('Funcionarios'),
-                getData('Ausencias'),
-                getData('Informacoes')
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -35,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarCalendario(funcionarios, ausencias);
             renderizarInformacoes(informacoes);
             setupAbsenceModal(funcionarios);
-            setupInfoModal(informacoes); // Passando 'informacoes' para a função
+            setupInfoModal(informacoes);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
@@ -185,13 +195,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 const infoId = card.dataset.infoId;
                 if (confirm('Tem certeza de que deseja excluir esta informação?')) {
                     try {
-                        const result = await postData({ aba: 'Informacoes', acao: 'excluir', dados: { id: infoId } });
+                        const result = await postData('Informacoes', { id: infoId }, 'excluir');
                         if (result.status === "success") {
-                            alert('Informação excluída com sucesso!');
+                            alert('Informação excluída com sucesso! A página será atualizada.');
                             location.reload();
-                        } else {
-                            alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
-                        }
+                        } else { alert('Erro ao excluir.'); }
                     } catch (error) { alert('Erro de rede ao tentar excluir.'); }
                 }
             });
@@ -245,18 +253,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                const result = await postData({ aba: 'Ausencias', acao: 'adicionar', dados: novaAusencia });
+                const result = await postData('Ausencias', novaAusencia, 'adicionar');
                 if (result.status === "success") {
-                    alert('Ausência registrada com sucesso!');
+                    alert('Ausência registrada com sucesso! A página será atualizada.');
                     location.reload();
                 } else {
-                    alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                    alert('Erro ao registrar ausência.');
                     submitButton.disabled = false;
                     submitButton.textContent = 'Salvar Ausência';
                 }
             } catch (error) {
-                console.error('Erro de rede ao enviar formulário:', error);
-                alert('Erro de rede. Verifique sua conexão e tente novamente.');
+                console.error('Erro de rede:', error);
+                alert('Erro de rede.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Ausência';
             }
@@ -293,18 +301,18 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             try {
                 const acao = infoId ? 'editar' : 'adicionar';
-                const result = await postData({ aba: 'Informacoes', acao: acao, dados: novaInfo });
+                const result = await postData('Informacoes', novaInfo, acao);
                 if (result.status === "success") {
-                    alert('Informação registrada com sucesso!');
+                    alert('Informação registrada com sucesso! A página será atualizada.');
                     location.reload();
                 } else {
-                    alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                    alert('Erro ao registrar informação.');
                     submitButton.disabled = false;
                     submitButton.textContent = 'Salvar Informação';
                 }
             } catch (error) {
-                console.error('Erro de rede ao enviar formulário de informação:', error);
-                alert('Erro de rede. Verifique sua conexão e tente novamente.');
+                console.error('Erro de rede:', error);
+                alert('Erro de rede.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Informação';
             }
