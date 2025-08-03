@@ -1,13 +1,39 @@
-// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js ##########
+// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js (VERSÃO CORRIGIDA) ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
+    // Função para fazer requisições GET para a API
+    async function getData(aba) {
+        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
+        if (!response.ok) {
+            throw new Error(`Erro de rede ao buscar a aba: ${aba}`);
+        }
+        return response.json();
+    }
+
+    // Função para fazer requisições POST para a API
+    async function postData(aba, dados) {
+        const response = await fetch(NOVA_API_URL, {
+            method: 'POST',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8',
+            },
+            body: JSON.stringify({ aba: aba, dados: dados }),
+        });
+        if (!response.ok) {
+            throw new Error(`Erro de rede ao enviar para a aba: ${aba}`);
+        }
+        return response.json();
+    }
+
+    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                fetch(`${NOVA_API_URL}?aba=Funcionarios`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Ausencias`).then(res => res.json()),
-                fetch(`${NOVA_API_URL}?aba=Informacoes`).then(res => res.json())
+                getData('Funcionarios'),
+                getData('Ausencias'),
+                getData('Informacoes')
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -26,20 +52,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Função para fazer requisições POST para a API
-    async function postData(aba, dados) {
-        const response = await fetch(NOVA_API_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'text/plain;charset=utf-8', // Usar text/plain para evitar o 'preflight' do CORS
-            },
-            body: JSON.stringify({ aba: aba, dados: dados }),
-        });
-        return response.json();
-    }
-
-    // O resto do seu código, com pequenas alterações nos formulários para usar o postData
     function processarAusencias(funcionarios, ausencias, hoje) {
         const hojeSemHoras = new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate());
         return funcionarios.map(func => {
