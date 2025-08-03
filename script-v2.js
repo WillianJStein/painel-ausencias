@@ -160,7 +160,7 @@ document.addEventListener('DOMContentLoaded', function() {
         calendar.render();
     }
     
-    // Função para desenhar o Quadro de Informações (COM BOTÕES DE AÇÃO)
+// Função para desenhar o Quadro de Informações (COM ÍCONES SVG PERSONALIZADOS)
 function renderizarInformacoes(informacoes) {
     const board = document.getElementById('info-board');
     board.innerHTML = ''; 
@@ -170,7 +170,6 @@ function renderizarInformacoes(informacoes) {
         return;
     }
 
-    // Ordena para que os destaques apareçam primeiro
     informacoes.sort((a, b) => {
         if (a.destaque === b.destaque) return 0;
         return a.destaque === 'TRUE' ? -1 : 1;
@@ -180,20 +179,29 @@ function renderizarInformacoes(informacoes) {
         if (info.mensagem) {
             const card = document.createElement('div');
             card.className = 'info-card';
-            // Adiciona um atributo de dados para sabermos o ID da informação
             card.dataset.infoId = info.id; 
 
             if (info.destaque && info.destaque.toString().toUpperCase() === 'TRUE') {
                 card.classList.add('destaque');
             }
             
-            // Usamos o novo container .info-card-header para alinhar o texto e os botões
+            // Aqui estão os novos botões com os SVGs que escolhemos
             let cardHTML = `
                 <div class="info-card-header">
                     <p>${info.mensagem}</p>
                     <div class="info-card-actions">
-                        <button class="action-btn edit-btn" title="Editar">✏️</button>
-                        <button class="action-btn delete-btn" title="Excluir">🗑️</button>
+                        <button class="action-btn edit-btn" title="Editar">
+                            <svg viewBox="0 0 32 32" fill="currentColor" style="width: 18px; height: 18px;">
+                                <path d="M25.384,11.987a.993.993,0,0,1-.707-.293L20.434,7.452a1,1,0,0,1,0-1.414l2.122-2.121a3.07,3.07,0,0,1,4.242,0l1.414,1.414a3,3,0,0,1,0,4.242l-2.122,2.121A.993.993,0,0,1,25.384,11.987ZM22.555,6.745l2.829,2.828L26.8,8.159a1,1,0,0,0,0-1.414L25.384,5.331a1.023,1.023,0,0,0-1.414,0Z"></path>
+                                <path d="M11.9,22.221a2,2,0,0,1-1.933-2.487l.875-3.5a3.02,3.02,0,0,1,.788-1.393l8.8-8.8a1,1,0,0,1,1.414,0l4.243,4.242a1,1,0,0,1,0,1.414l-8.8,8.8a3,3,0,0,1-1.393.79h0l-3.5.875A2.027,2.027,0,0,1,11.9,22.221Zm3.752-1.907h0ZM21.141,8.159l-8.094,8.093a1,1,0,0,0-.262.465l-.876,3.5,3.5-.876a1,1,0,0,0,.464-.263l8.094-8.094Z"></path>
+                                <path d="M22,29H8a5.006,5.006,0,0,1-5-5V10A5.006,5.006,0,0,1,8,5h9.64a1,1,0,0,1,0,2H8a3,3,0,0,0-3,3V24a3,3,0,0,0,3,3H22a3,3,0,0,0,3-3V14.61a1,1,0,0,1,2,0V24A5.006,5.006,0,0,1,22,29Z"></path>
+                            </svg>
+                        </button>
+                        <button class="action-btn delete-btn" title="Excluir">
+                            <svg viewBox="0 0 24 24" fill="currentColor" style="width: 18px; height: 18px;">
+                                <path d="M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19V4Z"></path>
+                            </svg>
+                        </button>
                     </div>
                 </div>
             `;
@@ -205,6 +213,28 @@ function renderizarInformacoes(informacoes) {
             card.innerHTML = cardHTML;
             board.appendChild(card);
         }
+    });
+
+    // Esta parte é nova e importante: precisamos adicionar os 'event listeners' aos novos botões
+    addInfoEventListeners();
+}
+
+// Esta função inteira é nova!
+function addInfoEventListeners() {
+    // Ação para os botões de DELETAR
+    document.querySelectorAll('.delete-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Lógica para deletar virá aqui
+            alert('A função DELETAR virá no próximo episódio!');
+        });
+    });
+
+    // Ação para os botões de EDITAR
+    document.querySelectorAll('.edit-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            // Lógica para editar virá aqui
+            alert('A função EDITAR virá no próximo episódio!');
+        });
     });
 }
 
@@ -314,4 +344,5 @@ function renderizarInformacoes(informacoes) {
 
     carregarDados();
 });
+
 
