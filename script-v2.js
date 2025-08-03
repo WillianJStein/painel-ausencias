@@ -1,39 +1,30 @@
-// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js (VERSÃO CORRIGIDA) ##########
+// ########## CÓDIGO COMPLETO, FINAL E VITORIOSO PARA O script-v2.js ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Função para fazer requisições GET para a API
-    async function getData(aba) {
-        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
-        if (!response.ok) {
-            throw new Error(`Erro de rede ao buscar a aba: ${aba}`);
-        }
-        return response.json();
-    }
-
-    // Função para fazer requisições POST para a API
-    async function postData(aba, dados) {
-        const response = await fetch(NOVA_API_URL, {
-            method: 'POST',
-            mode: 'cors',
-            headers: {
-              'Content-Type': 'text/plain;charset=utf-8',
-            },
-            body: JSON.stringify({ aba: aba, dados: dados }),
+    // Função "Telegrama Cantado" (JSONP) para LER dados, contornando o CORS
+    function fetchJSONP(url) {
+        return new Promise((resolve, reject) => {
+            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
+            window[callbackName] = function(data) {
+                delete window[callbackName];
+                document.body.removeChild(script);
+                resolve(data);
+            };
+            const script = document.createElement('script');
+            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
+            script.onerror = reject;
+            document.body.appendChild(script);
         });
-        if (!response.ok) {
-            throw new Error(`Erro de rede ao enviar para a aba: ${aba}`);
-        }
-        return response.json();
     }
 
     // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
-                getData('Funcionarios'),
-                getData('Ausencias'),
-                getData('Informacoes')
+                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -214,15 +205,16 @@ document.addEventListener('DOMContentLoaded', function() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                const result = await postData('Ausencias', novaAusencia);
-                if (result.status === "success") {
-                    alert('Ausência registrada com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Salvar Ausência';
-                }
+                // Para escrever, usamos fetch normal, pois o doPost tem o CORS correto
+                const response = await fetch(NOVA_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    redirect: 'follow',
+                    body: JSON.stringify({ aba: 'Ausencias', dados: novaAusencia }),
+                });
+                // Como usamos no-cors, não podemos ler a resposta, então apenas recarregamos
+                alert('Ausência enviada para registro! A página será atualizada.');
+                location.reload();
             } catch (error) {
                 console.error('Erro de rede ao enviar formulário:', error);
                 alert('Erro de rede. Verifique sua conexão e tente novamente.');
@@ -255,15 +247,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
             try {
-                const result = await postData('Informacoes', novaInfo);
-                if (result.status === "success") {
-                    alert('Informação registrada com sucesso!');
-                    location.reload();
-                } else {
-                    alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
-                    submitButton.disabled = false;
-                    submitButton.textContent = 'Salvar Informação';
-                }
+                const response = await fetch(NOVA_API_URL, {
+                    method: 'POST',
+                    mode: 'no-cors',
+                    redirect: 'follow',
+                    body: JSON.stringify({ aba: 'Informacoes', dados: novaInfo }),
+                });
+                alert('Informação enviada para registro! A página será atualizada.');
+                location.reload();
             } catch (error) {
                 console.error('Erro de rede ao enviar formulário de informação:', error);
                 alert('Erro de rede. Verifique sua conexão e tente novamente.');
