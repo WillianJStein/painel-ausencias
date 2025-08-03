@@ -1,8 +1,8 @@
-// ########## CÓDIGO FINAL, DEFINITIVO E CORRIGIDO ##########
+// ########## CÓDIGO FINAL, VITORIOSO E CORRIGIDO DE VERDADE ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Técnica JSONP ("Telegrama") para LER dados (ignora CORS)
+    // Técnica JSONP ("Telegrama") para LER dados
     function fetchJSONP(url) {
         return new Promise((resolve, reject) => {
             const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
@@ -21,17 +21,16 @@ document.addEventListener('DOMContentLoaded', function() {
     // Técnica FETCH ("Carta") para ESCREVER dados
     async function postData(aba, dados, acao = 'adicionar') {
         const payload = { aba: aba, acao: acao, dados: dados };
-        // Este fetch é "fire and forget" devido às limitações do no-cors
         await fetch(NOVA_API_URL, {
             method: 'POST',
             mode: 'no-cors',
             redirect: 'follow',
             body: JSON.stringify(payload),
         });
-        // Assumimos sucesso, já que não podemos ler a resposta
         return { status: "success" }; 
     }
 
+    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
@@ -49,7 +48,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarCalendario(funcionarios, ausencias);
             renderizarInformacoes(informacoes);
             setupAbsenceModal(funcionarios);
-            setupInfoModal();
+            setupInfoModal(informacoes); // Passando 'informacoes' para a função
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
@@ -205,7 +204,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         document.querySelectorAll('.edit-btn').forEach(button => {
             button.addEventListener('click', function(event) {
-                alert('A função EDITAR virá no próximo episódio!');
+                const card = event.target.closest('.info-card');
+                const infoId = card.dataset.infoId;
+                const infoParaEditar = informacoes.find(info => info.id == infoId);
+                if (infoParaEditar) {
+                    const modal = document.getElementById('info-modal');
+                    document.getElementById('info-id').value = infoParaEditar.id;
+                    document.getElementById('info-message').value = infoParaEditar.mensagem;
+                    document.getElementById('info-highlight').checked = (infoParaEditar.destaque && infoParaEditar.destaque.toString().toUpperCase() === 'TRUE');
+                    modal.style.display = 'block';
+                }
             });
         });
     }
@@ -261,7 +269,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function setupInfoModal() {
+    function setupInfoModal(informacoes) { // Adicionei 'informacoes' aqui
         const modal = document.getElementById('info-modal');
         const openModalBtn = document.getElementById('add-info-button');
         const closeModalBtn = modal.querySelector('.close-button');
