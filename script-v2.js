@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', function() {
             const [funcionarios, ausencias, informacoes] = await Promise.all([
                 fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
                 fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`)
+                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`),
+                fetchJSONP(`${NOVA_API_URL}?aba=Config`)
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error));
@@ -46,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
             renderizarInformacoes(informacoes);
             setupAbsenceModal(funcionarios);
             setupInfoModal(informacoes);
+            renderizarConfig(config);
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
@@ -187,7 +189,16 @@ document.addEventListener('DOMContentLoaded', function() {
         });
         addInfoEventListeners(informacoes);
     }
-    
+
+    // Função para renderizar as configurações (CUB)
+function renderizarConfig(config) {
+    const cubData = config.find(item => item.chave === 'cub');
+    if (cubData && cubData.valor) {
+        const cubValue = parseFloat(cubData.valor);
+        const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        document.getElementById('cub-value').textContent = formattedValue;
+    }
+}
     function addInfoEventListeners(informacoes) {
         document.querySelectorAll('.delete-btn').forEach(button => {
             button.addEventListener('click', async function(event) {
@@ -333,3 +344,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     carregarDados();
 });
+
