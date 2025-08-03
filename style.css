@@ -345,3 +345,69 @@ h3 {
     font-weight: bold;
     color: var(--primary-color);
 }
+
+/* Estilos do botão de Dark Mode (Otimizado para SVG) */
+.header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.dark-mode-button {
+    background: none;
+    border: 2px solid var(--ferias-color);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+    transition: background-color 0.3s;
+}
+
+.dark-mode-button svg {
+    fill: var(--ferias-color); /* Pinta o ícone */
+    transition: fill 0.3s;
+}
+
+.dark-mode-button:hover {
+    background-color: var(--ferias-color);
+}
+
+.dark-mode-button:hover svg {
+    fill: var(--text-color); /* Pinta o ícone no hover */
+}
+
+/* Ajuste da cor do ícone no modo escuro */
+body.dark-mode .dark-mode-button:hover svg {
+    fill: #121212; /* Cor do ícone no hover do modo escuro */
+}
+
+
+/* --- A MÁGICA DO DARK MODE --- */
+
+body.dark-mode {
+    /* Redefinimos as variáveis de cor quando o body tem a classe .dark-mode */
+    --primary-color: #0d6efd; /* Um azul um pouco mais vibrante para o escuro */
+    --light-gray: #121212; /* Fundo principal super escuro */
+    --border-color: #444;
+    --text-color: #e8e6e3; /* Texto principal quase branco */
+    
+    /* Cor de fundo dos cards */
+    --card-background: #1e1e1e;
+}
+
+/* Ajustes específicos para elementos no modo escuro */
+body.dark-mode section {
+    background-color: var(--card-background);
+}
+
+body.dark-mode .modal-content {
+    background-color: #2a2a2a;
+}
+
+body.dark-mode .info-card.destaque {
+    background-color: #3b310a;
+}
