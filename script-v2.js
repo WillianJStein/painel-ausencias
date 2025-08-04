@@ -88,7 +88,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    function renderizarPainel(funcionarios) {
+function renderizarPainel(funcionarios) {
         const grid = document.getElementById('status-grid');
         grid.innerHTML = '';
         const grupos = funcionarios.reduce((acc, func) => {
@@ -99,10 +99,17 @@ document.addEventListener('DOMContentLoaded', function() {
         }, {});
         for (const nomeGrupo in grupos) {
             const funcionariosDoGrupo = grupos[nomeGrupo];
-            const temAusente = funcionariosDoGrupo.some(f => f.status_atual !== 'Presente');
+            
+            // --- INÍCIO DA NOVA LÓGICA DE AVISO ---
+            const funcionariosPresentes = funcionariosDoGrupo.filter(f => f.status_atual === 'Presente').length;
+            const precisaDeAtencao = (funcionariosPresentes <= 1 && funcionariosDoGrupo.length > 1); // Atenção se só 1 ou 0 estiver presente (e o grupo tiver mais de 1 pessoa)
+            // --- FIM DA NOVA LÓGICA DE AVISO ---
+
             const groupDiv = document.createElement('div');
             groupDiv.className = 'team-group';
-            let groupHTML = `<div class="team-header"><h4>${nomeGrupo}</h4><span class="status-badge ${temAusente ? 'warning' : 'ok'}">${temAusente ? 'Atenção' : 'OK'}</span></div>`;
+            
+            let groupHTML = `<div class="team-header"><h4>${nomeGrupo}</h4><span class="status-badge ${precisaDeAtencao ? 'warning' : 'ok'}">${precisaDeAtencao ? 'Atenção' : 'OK'}</span></div>`;
+            
             funcionariosDoGrupo.forEach(func => {
                 const statusClass = func.status_atual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, '-');
                 groupHTML += `<div class="employee"><div><div class="employee-name">${func.nome}</div>${func.detalhes_ausencia ? `<div class="employee-details">${func.detalhes_ausencia}</div>` : ''}</div><span class="employee-status status-${statusClass}">${func.status_atual}</span></div>`;
@@ -416,6 +423,7 @@ function setupInfoModal(informacoes) {
 
     carregarDados();
 });
+
 
 
 
