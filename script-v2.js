@@ -1,45 +1,30 @@
-// ########## CÓDIGO COMPLETO E FINAL (VERSÃO MISTA E VITORIOSA) ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Técnica JSONP ("Telegrama") para LER dados (ignora CORS)
-    function fetchJSONP(url) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                resolve(data);
-            };
-            const script = document.createElement('script');
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
+    async function getData(aba) {
+        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
+        if (!response.ok) throw new Error(`Erro de rede ao buscar: ${aba}`);
+        return response.json();
     }
     
-    // Técnica FETCH ("Carta") para ESCREVER dados
-    async function postData(aba, dados, acao = 'adicionar') {
-        const payload = { aba: aba, acao: acao, dados: dados };
-        // Este fetch é "fire and forget" devido às limitações do no-cors
-        await fetch(NOVA_API_URL, {
+    async function postData(payload) {
+        const response = await fetch(NOVA_API_URL, {
             method: 'POST',
-            mode: 'no-cors', // Importante para o POST no Apps Script
-            redirect: 'follow',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload),
         });
-        // Assumimos sucesso, já que não podemos ler a resposta
-        return { status: "success" }; 
+        if (!response.ok) throw new Error(`Erro de rede ao enviar dados`);
+        return response.json();
     }
 
-    // Função principal que carrega todos os dados
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes, config] = await Promise.all([
-                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Config`)
+                getData('Funcionarios'),
+                getData('Ausencias'),
+                getData('Informacoes'),
+                getData('Config')
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error || config.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error || config.error));
@@ -53,58 +38,51 @@ document.addEventListener('DOMContentLoaded', function() {
             setupAbsenceModal(funcionarios);
             setupInfoModal(informacoes);
             renderizarConfig(config);
-            setupDarkMode(); // Adicionado para inicializar o dark mode
+            setupDarkMode();
         } catch (error) {
             console.error('Erro ao carregar dados:', error);
             document.getElementById('status-grid').innerHTML = '<p>Falha ao carregar os dados. Verifique o console.</p>';
         }
     }
 
-    // ---- A PARTIR DAQUI, COLE TODAS AS OUTRAS FUNÇÕES QUE JÁ CRIAMOS ----
-    // (Incluindo processarAusencias, renderizarPainel, atualizarResumo, renderizarCalendario, 
-    // renderizarInformacoes, addInfoEventListeners, setupAbsenceModal, setupInfoModal, setupDarkMode e o window.addEventListener final)
-    
-    // Para garantir, o código 100% completo e testado está na caixa abaixo.
+    // A partir daqui, cole todas as suas outras funções...
+    // (O código completo está na caixa abaixo para garantir)
 });
 
-
-// ########## CÓDIGO FINAL E COMPLETO PARA O script-v2.js ##########
+// ########## CÓDIGO COMPLETO E FINAL PARA O script-v2.js ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    function fetchJSONP(url) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                resolve(data);
-            };
-            const script = document.createElement('script');
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
+    async function getData(aba) {
+        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
+        if (!response.ok) {
+            throw new Error(`Erro de rede ao buscar a aba: ${aba}`);
+        }
+        return response.json();
     }
-    
-    async function postData(aba, dados, acao = 'adicionar') {
-        const payload = { aba: aba, acao: acao, dados: dados };
-        await fetch(NOVA_API_URL, {
+
+    async function postData(payload) {
+        const response = await fetch(NOVA_API_URL, {
             method: 'POST',
-            mode: 'no-cors',
-            redirect: 'follow',
+            mode: 'cors',
+            headers: {
+              'Content-Type': 'text/plain;charset=utf-8',
+            },
             body: JSON.stringify(payload),
         });
-        return { status: "success" }; 
+        if (!response.ok) {
+            throw new Error(`Erro de rede ao enviar para a aba: ${payload.aba}`);
+        }
+        return response.json();
     }
 
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes, config] = await Promise.all([
-                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Config`)
+                getData('Funcionarios'),
+                getData('Ausencias'),
+                getData('Informacoes'),
+                getData('Config')
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error || config.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error || config.error));
@@ -277,11 +255,13 @@ document.addEventListener('DOMContentLoaded', function() {
                 const infoId = card.dataset.infoId;
                 if (confirm('Tem certeza de que deseja excluir esta informação?')) {
                     try {
-                        const result = await postData('Informacoes', { id: infoId }, 'excluir');
+                        const result = await postData({ aba: 'Informacoes', acao: 'excluir', dados: { id: infoId } });
                         if (result.status === "success") {
-                            alert('Informação excluída com sucesso! A página será atualizada.');
+                            alert('Informação excluída com sucesso!');
                             location.reload();
-                        } else { alert('Erro ao excluir.'); }
+                        } else {
+                            alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
+                        }
                     } catch (error) { alert('Erro de rede ao tentar excluir.'); }
                 }
             });
@@ -335,18 +315,18 @@ document.addEventListener('DOMContentLoaded', function() {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                const result = await postData('Ausencias', novaAusencia, 'adicionar');
+                const result = await postData({ aba: 'Ausencias', acao: 'adicionar', dados: novaAusencia });
                 if (result.status === "success") {
-                    alert('Ausência registrada com sucesso! A página será atualizada.');
+                    alert('Ausência registrada com sucesso!');
                     location.reload();
                 } else {
-                    alert('Erro ao registrar ausência.');
+                    alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
                     submitButton.disabled = false;
                     submitButton.textContent = 'Salvar Ausência';
                 }
             } catch (error) {
-                console.error('Erro de rede:', error);
-                alert('Erro de rede.');
+                console.error('Erro de rede ao enviar formulário:', error);
+                alert('Erro de rede. Verifique sua conexão e tente novamente.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Ausência';
             }
@@ -383,18 +363,18 @@ document.addEventListener('DOMContentLoaded', function() {
             };
             try {
                 const acao = infoId ? 'editar' : 'adicionar';
-                const result = await postData('Informacoes', novaInfo, acao);
+                const result = await postData({ aba: 'Informacoes', acao: acao, dados: novaInfo });
                 if (result.status === "success") {
-                    alert('Informação registrada com sucesso! A página será atualizada.');
+                    alert('Informação registrada com sucesso!');
                     location.reload();
                 } else {
-                    alert('Erro ao registrar informação.');
+                    alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
                     submitButton.disabled = false;
                     submitButton.textContent = 'Salvar Informação';
                 }
             } catch (error) {
-                console.error('Erro de rede:', error);
-                alert('Erro de rede.');
+                console.error('Erro de rede ao enviar formulário de informação:', error);
+                alert('Erro de rede. Verifique sua conexão e tente novamente.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Informação';
             }
@@ -422,10 +402,14 @@ document.addEventListener('DOMContentLoaded', function() {
         const absenceModal = document.getElementById('absence-modal');
         const infoModal = document.getElementById('info-modal');
         if (event.target == absenceModal) {
-            absenceModal.style.display = 'none';
+            // Chama a função de fechar para garantir a limpeza do formulário
+            const closeModalBtn = absenceModal.querySelector('.close-button');
+            if (closeModalBtn) closeModalBtn.click();
         }
         if (event.target == infoModal) {
-            infoModal.style.display = 'none';
+            // Chama a função de fechar para garantir a limpeza do formulário
+            const closeModalBtn = infoModal.querySelector('.close-button');
+            if (closeModalBtn) closeModalBtn.click();
         }
     });
 
