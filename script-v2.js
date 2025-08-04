@@ -252,7 +252,41 @@ function renderizarConfig(config) {
             });
         });
     }
+function addInfoEventListeners(informacoes) {
+        document.querySelectorAll('.delete-btn').forEach(button => {
+            button.addEventListener('click', async function(event) {
+                const card = event.target.closest('.info-card');
+                const infoId = card.dataset.infoId;
+                if (confirm('Tem certeza de que deseja excluir esta informação?')) {
+                    try {
+                        const result = await postData({ aba: 'Informacoes', acao: 'excluir', dados: { id: infoId } });
+                        if (result.status === "success") {
+                            alert('Informação excluída com sucesso!');
+                            location.reload();
+                        } else {
+                            alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
+                        }
+                    } catch (error) { alert('Erro de rede ao tentar excluir.'); }
+                }
+            });
+        });
 
+        document.querySelectorAll('.edit-btn').forEach(button => {
+            button.addEventListener('click', function(event) {
+                const card = event.target.closest('.info-card');
+                const infoId = card.dataset.infoId;
+                const infoParaEditar = informacoes.find(info => info.id == infoId);
+                if (infoParaEditar) {
+                    const modal = document.getElementById('info-modal');
+                    document.getElementById('info-id').value = infoParaEditar.id; // Preenche o ID escondido
+                    document.getElementById('info-message').value = infoParaEditar.mensagem;
+                    document.getElementById('info-highlight').checked = (infoParaEditar.destaque && infoParaEditar.destaque.toString().toUpperCase() === 'TRUE');
+                    modal.style.display = 'block';
+                }
+            });
+        });
+    }
+    
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
         const openModalBtn = document.querySelector('.register-button');
@@ -297,17 +331,20 @@ function renderizarConfig(config) {
         });
     }
 
-    function setupInfoModal(informacoes) {
+function setupInfoModal(informacoes) {
         const modal = document.getElementById('info-modal');
         const openModalBtn = document.getElementById('add-info-button');
         const closeModalBtn = modal.querySelector('.close-button');
         const infoForm = document.getElementById('info-form');
         const submitButton = infoForm.querySelector('.submit-button');
+
+        // Abre o modal em modo "Adicionar"
         openModalBtn.onclick = function() {
-            document.getElementById('info-id').value = '';
+            document.getElementById('info-id').value = ''; // Limpa o ID para garantir que é um novo registro
             infoForm.reset();
             modal.style.display = 'block';
         }
+
         function fecharModalInfo() {
             modal.style.display = 'none';
             infoForm.reset();
@@ -315,23 +352,35 @@ function renderizarConfig(config) {
             submitButton.textContent = 'Salvar Informação';
         }
         closeModalBtn.onclick = fecharModalInfo;
+
+        // Lógica de Salvar (Adicionar ou Editar)
         infoForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
+            
             const infoId = document.getElementById('info-id').value;
             const novaInfo = {
                 id: infoId,
                 mensagem: document.getElementById('info-message').value,
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
+
             try {
-                const acao = infoId ? 'editar' : 'adicionar';
-                await postData('Informacoes', novaInfo, acao);
-                // location.reload() será chamado após o alerta
+                const acao = infoId ? 'editar' : 'adicionar'; // Decide a ação com base no ID
+                const result = await postData({ aba: 'Informacoes', acao: acao, dados: novaInfo });
+
+                if (result.status === "success") {
+                    alert('Informação registrada com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao registrar informação. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Informação';
+                }
             } catch (error) {
-                console.error('Erro de rede:', error);
-                alert('Erro de rede.');
+                console.error('Erro de rede ao enviar formulário de informação:', error);
+                alert('Erro de rede. Verifique sua conexão e tente novamente.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Informação';
             }
@@ -367,5 +416,6 @@ function renderizarConfig(config) {
 
     carregarDados();
 });
+
 
 
