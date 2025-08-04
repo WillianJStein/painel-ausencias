@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', function() {
         addInfoEventListeners(informacoes);
     }
 
-   // Função para renderizar as configurações (CUB com Mês/Ano)
+// Função para renderizar as configurações (CUB com Mês/Ano FORMATADO)
 function renderizarConfig(config) {
     const cubData = config.find(item => item.chave === 'cub');
     const cubTitleElement = document.getElementById('cub-title');
@@ -209,7 +209,17 @@ function renderizarConfig(config) {
 
         // Atualiza o título se o detalhe existir
         if (cubData.detalhe) {
-            cubTitleElement.textContent = `CUB m² (${cubData.detalhe}):`;
+            // Cria um objeto de data a partir da string completa
+            const dataReferencia = new Date(cubData.detalhe);
+            
+            // Extrai o nome do mês e o ano
+            // O toLocaleString formata a data para o padrão brasileiro (ex: "agosto de 2025")
+            const mesAnoFormatado = dataReferencia.toLocaleString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
+
+            // Coloca a primeira letra do mês em maiúscula
+            const textoFinal = mesAnoFormatado.charAt(0).toUpperCase() + mesAnoFormatado.slice(1);
+
+            cubTitleElement.textContent = `CUB m² (${textoFinal}):`;
         }
     }
 }
@@ -357,4 +367,5 @@ function renderizarConfig(config) {
 
     carregarDados();
 });
+
 
