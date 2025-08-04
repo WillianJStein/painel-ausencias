@@ -195,14 +195,24 @@ document.addEventListener('DOMContentLoaded', function() {
         addInfoEventListeners(informacoes);
     }
 
-    function renderizarConfig(config) {
-        const cubData = config.find(item => item.chave === 'cub');
-        if (cubData && cubData.valor) {
-            const cubValue = parseFloat(cubData.valor);
-            const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-            document.getElementById('cub-value').textContent = formattedValue;
+   // Função para renderizar as configurações (CUB com Mês/Ano)
+function renderizarConfig(config) {
+    const cubData = config.find(item => item.chave === 'cub');
+    const cubTitleElement = document.getElementById('cub-title');
+    const cubValueElement = document.getElementById('cub-value');
+
+    if (cubData && cubData.valor) {
+        // Atualiza o valor
+        const cubValue = parseFloat(cubData.valor);
+        const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+        cubValueElement.textContent = formattedValue;
+
+        // Atualiza o título se o detalhe existir
+        if (cubData.detalhe) {
+            cubTitleElement.textContent = `CUB m² (${cubData.detalhe}):`;
         }
     }
+}
     
     function addInfoEventListeners(informacoes) {
         document.querySelectorAll('.delete-btn').forEach(button => {
@@ -347,3 +357,4 @@ document.addEventListener('DOMContentLoaded', function() {
 
     carregarDados();
 });
+
