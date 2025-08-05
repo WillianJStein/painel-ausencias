@@ -1,44 +1,32 @@
-// ########## CÓDIGO FINAL E VITORIOSO (MISTO) ##########
+// ########## CÓDIGO FINAL E VITORIOSO (VERSÃO FETCH MODERNA) ##########
 document.addEventListener('DOMContentLoaded', function() {
     const NOVA_API_URL = 'https://script.google.com/macros/s/AKfycbxi4HR0tpAP0-ZWi8SeKKc-rD3Sh_eUKfvAG-OxixFjg2FaEJ0sxdM_sX8JY3JaEq0d/exec';
 
-    // Técnica JSONP ("Telegrama") para LER dados (ignora CORS)
-    function fetchJSONP(url) {
-        return new Promise((resolve, reject) => {
-            const callbackName = 'jsonp_callback_' + Math.round(100000 * Math.random());
-            window[callbackName] = function(data) {
-                delete window[callbackName];
-                document.body.removeChild(script);
-                resolve(data);
-            };
-            const script = document.createElement('script');
-            script.src = url + (url.indexOf('?') >= 0 ? '&' : '?') + 'callback=' + callbackName;
-            script.onerror = reject;
-            document.body.appendChild(script);
-        });
+    // Funções de comunicação com a API
+    async function getData(aba) {
+        const response = await fetch(`${NOVA_API_URL}?aba=${aba}`);
+        if (!response.ok) throw new Error(`Erro de rede ao buscar: ${aba}`);
+        return response.json();
     }
-    
-    // Técnica FETCH ("Carta") para ESCREVER dados
-    async function postData(aba, dados, acao = 'adicionar') {
-        const payload = { aba: aba, acao: acao, dados: dados };
-        await fetch(NOVA_API_URL, {
+    async function postData(payload) {
+        const response = await fetch(NOVA_API_URL, {
             method: 'POST',
-            mode: 'no-cors',
-            redirect: 'follow',
+            mode: 'cors',
+            headers: { 'Content-Type': 'text/plain;charset=utf-8' },
             body: JSON.stringify(payload),
         });
-        // Como usamos no-cors, não podemos ler a resposta, então apenas recarregamos a página
-        alert('Ação enviada com sucesso! A página será atualizada.');
-        location.reload();
+        if (!response.ok) throw new Error(`Erro de rede ao enviar dados`);
+        return response.json();
     }
 
+    // Função principal
     async function carregarDados() {
         try {
             const [funcionarios, ausencias, informacoes, config] = await Promise.all([
-                fetchJSONP(`${NOVA_API_URL}?aba=Funcionarios`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Ausencias`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Informacoes`),
-                fetchJSONP(`${NOVA_API_URL}?aba=Config`)
+                getData('Funcionarios'),
+                getData('Ausencias'),
+                getData('Informacoes'),
+                getData('Config')
             ]);
             if (funcionarios.error || ausencias.error || informacoes.error || config.error) {
                 throw new Error('Erro da API: ' + (funcionarios.error || ausencias.error || informacoes.error || config.error));
@@ -88,7 +76,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-function renderizarPainel(funcionarios) {
+    function renderizarPainel(funcionarios) {
         const grid = document.getElementById('status-grid');
         grid.innerHTML = '';
         const grupos = funcionarios.reduce((acc, func) => {
@@ -99,17 +87,10 @@ function renderizarPainel(funcionarios) {
         }, {});
         for (const nomeGrupo in grupos) {
             const funcionariosDoGrupo = grupos[nomeGrupo];
-            
-            // --- INÍCIO DA NOVA LÓGICA DE AVISO ---
-            const funcionariosPresentes = funcionariosDoGrupo.filter(f => f.status_atual === 'Presente').length;
-            const precisaDeAtencao = (funcionariosPresentes <= 1 && funcionariosDoGrupo.length > 1); // Atenção se só 1 ou 0 estiver presente (e o grupo tiver mais de 1 pessoa)
-            // --- FIM DA NOVA LÓGICA DE AVISO ---
-
+            const temAusente = funcionariosDoGrupo.some(f => f.status_atual !== 'Presente');
             const groupDiv = document.createElement('div');
             groupDiv.className = 'team-group';
-            
-            let groupHTML = `<div class="team-header"><h4>${nomeGrupo}</h4><span class="status-badge ${precisaDeAtencao ? 'warning' : 'ok'}">${precisaDeAtencao ? 'Atenção' : 'OK'}</span></div>`;
-            
+            let groupHTML = `<div class="team-header"><h4>${nomeGrupo}</h4><span class="status-badge ${temAusente ? 'warning' : 'ok'}">${temAusente ? 'Atenção' : 'OK'}</span></div>`;
             funcionariosDoGrupo.forEach(func => {
                 const statusClass = func.status_atual.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s/g, '-');
                 groupHTML += `<div class="employee"><div><div class="employee-name">${func.nome}</div>${func.detalhes_ausencia ? `<div class="employee-details">${func.detalhes_ausencia}</div>` : ''}</div><span class="employee-status status-${statusClass}">${func.status_atual}</span></div>`;
@@ -173,7 +154,7 @@ function renderizarPainel(funcionarios) {
     function renderizarInformacoes(informacoes) {
         const board = document.getElementById('info-board');
         board.innerHTML = '';
-        if (!informacoes || informacoes.length === 0) {
+        if (!informacoes || informacoes.length === 'undefined' || informacoes.length === 0) {
             board.innerHTML = '<p>Nenhuma informação no momento.</p>';
             return;
         }
@@ -202,34 +183,14 @@ function renderizarPainel(funcionarios) {
         addInfoEventListeners(informacoes);
     }
 
-// Função para renderizar as configurações (CUB com Mês/Ano FORMATADO)
-function renderizarConfig(config) {
-    const cubData = config.find(item => item.chave === 'cub');
-    const cubTitleElement = document.getElementById('cub-title');
-    const cubValueElement = document.getElementById('cub-value');
-
-    if (cubData && cubData.valor) {
-        // Atualiza o valor
-        const cubValue = parseFloat(cubData.valor);
-        const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-        cubValueElement.textContent = formattedValue;
-
-        // Atualiza o título se o detalhe existir
-        if (cubData.detalhe) {
-            // Cria um objeto de data a partir da string completa
-            const dataReferencia = new Date(cubData.detalhe);
-            
-            // Extrai o nome do mês e o ano
-            // O toLocaleString formata a data para o padrão brasileiro (ex: "agosto de 2025")
-            const mesAnoFormatado = dataReferencia.toLocaleString('pt-BR', { month: 'long', year: 'numeric', timeZone: 'UTC' });
-
-            // Coloca a primeira letra do mês em maiúscula
-            const textoFinal = mesAnoFormatado.charAt(0).toUpperCase() + mesAnoFormatado.slice(1);
-
-            cubTitleElement.textContent = `CUB m² (${textoFinal}):`;
+    function renderizarConfig(config) {
+        const cubData = config.find(item => item.chave === 'cub');
+        if (cubData && cubData.valor) {
+            const cubValue = parseFloat(cubData.valor);
+            const formattedValue = cubValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+            document.getElementById('cub-value').textContent = formattedValue;
         }
     }
-}
     
     function addInfoEventListeners(informacoes) {
         document.querySelectorAll('.delete-btn').forEach(button => {
@@ -238,8 +199,13 @@ function renderizarConfig(config) {
                 const infoId = card.dataset.infoId;
                 if (confirm('Tem certeza de que deseja excluir esta informação?')) {
                     try {
-                        await postData('Informacoes', { id: infoId }, 'excluir');
-                        // location.reload() será chamado após o alerta
+                        const result = await postData({ aba: 'Informacoes', acao: 'excluir', dados: { id: infoId } });
+                        if (result.status === "success") {
+                            alert('Informação excluída com sucesso!');
+                            location.reload();
+                        } else {
+                            alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
+                        }
                     } catch (error) { alert('Erro de rede ao tentar excluir.'); }
                 }
             });
@@ -259,41 +225,7 @@ function renderizarConfig(config) {
             });
         });
     }
-function addInfoEventListeners(informacoes) {
-        document.querySelectorAll('.delete-btn').forEach(button => {
-            button.addEventListener('click', async function(event) {
-                const card = event.target.closest('.info-card');
-                const infoId = card.dataset.infoId;
-                if (confirm('Tem certeza de que deseja excluir esta informação?')) {
-                    try {
-                        const result = await postData({ aba: 'Informacoes', acao: 'excluir', dados: { id: infoId } });
-                        if (result.status === "success") {
-                            alert('Informação excluída com sucesso!');
-                            location.reload();
-                        } else {
-                            alert('Erro ao excluir: ' + (result.error || 'Erro desconhecido'));
-                        }
-                    } catch (error) { alert('Erro de rede ao tentar excluir.'); }
-                }
-            });
-        });
 
-        document.querySelectorAll('.edit-btn').forEach(button => {
-            button.addEventListener('click', function(event) {
-                const card = event.target.closest('.info-card');
-                const infoId = card.dataset.infoId;
-                const infoParaEditar = informacoes.find(info => info.id == infoId);
-                if (infoParaEditar) {
-                    const modal = document.getElementById('info-modal');
-                    document.getElementById('info-id').value = infoParaEditar.id; // Preenche o ID escondido
-                    document.getElementById('info-message').value = infoParaEditar.mensagem;
-                    document.getElementById('info-highlight').checked = (infoParaEditar.destaque && infoParaEditar.destaque.toString().toUpperCase() === 'TRUE');
-                    modal.style.display = 'block';
-                }
-            });
-        });
-    }
-    
     function setupAbsenceModal(funcionarios) {
         const modal = document.getElementById('absence-modal');
         const openModalBtn = document.querySelector('.register-button');
@@ -327,31 +259,35 @@ function addInfoEventListeners(informacoes) {
                 data_fim: document.getElementById('end-date').value.split('-').reverse().join('/')
             };
             try {
-                await postData('Ausencias', novaAusencia, 'adicionar');
-                // location.reload() será chamado após o alerta
+                const result = await postData({ aba: 'Ausencias', acao: 'adicionar', dados: novaAusencia });
+                if (result.status === "success") {
+                    alert('Ausência registrada com sucesso!');
+                    location.reload();
+                } else {
+                    alert('Erro ao registrar ausência. Resposta da API: ' + (result.error || 'Erro desconhecido'));
+                    submitButton.disabled = false;
+                    submitButton.textContent = 'Salvar Ausência';
+                }
             } catch (error) {
-                console.error('Erro de rede:', error);
-                alert('Erro de rede.');
+                console.error('Erro de rede ao enviar formulário:', error);
+                alert('Erro de rede. Verifique sua conexão e tente novamente.');
                 submitButton.disabled = false;
                 submitButton.textContent = 'Salvar Ausência';
             }
         });
     }
 
-function setupInfoModal(informacoes) {
+    function setupInfoModal(informacoes) {
         const modal = document.getElementById('info-modal');
         const openModalBtn = document.getElementById('add-info-button');
         const closeModalBtn = modal.querySelector('.close-button');
         const infoForm = document.getElementById('info-form');
         const submitButton = infoForm.querySelector('.submit-button');
-
-        // Abre o modal em modo "Adicionar"
         openModalBtn.onclick = function() {
-            document.getElementById('info-id').value = ''; // Limpa o ID para garantir que é um novo registro
+            document.getElementById('info-id').value = '';
             infoForm.reset();
             modal.style.display = 'block';
         }
-
         function fecharModalInfo() {
             modal.style.display = 'none';
             infoForm.reset();
@@ -359,24 +295,19 @@ function setupInfoModal(informacoes) {
             submitButton.textContent = 'Salvar Informação';
         }
         closeModalBtn.onclick = fecharModalInfo;
-
-        // Lógica de Salvar (Adicionar ou Editar)
         infoForm.addEventListener('submit', async function(event) {
             event.preventDefault();
             submitButton.disabled = true;
             submitButton.textContent = 'Salvando...';
-            
             const infoId = document.getElementById('info-id').value;
             const novaInfo = {
                 id: infoId,
                 mensagem: document.getElementById('info-message').value,
                 destaque: document.getElementById('info-highlight').checked ? 'TRUE' : 'FALSE'
             };
-
             try {
-                const acao = infoId ? 'editar' : 'adicionar'; // Decide a ação com base no ID
+                const acao = infoId ? 'editar' : 'adicionar';
                 const result = await postData({ aba: 'Informacoes', acao: acao, dados: novaInfo });
-
                 if (result.status === "success") {
                     alert('Informação registrada com sucesso!');
                     location.reload();
@@ -410,20 +341,19 @@ function setupInfoModal(informacoes) {
         });
     }
 
+    // Configura o fechamento dos modais ao clicar fora
     window.addEventListener('click', function(event) {
         const absenceModal = document.getElementById('absence-modal');
         const infoModal = document.getElementById('info-modal');
         if (event.target == absenceModal) {
-            absenceModal.style.display = 'none';
+            const closeModalBtn = absenceModal.querySelector('.close-button');
+            if (closeModalBtn) closeModalBtn.click();
         }
         if (event.target == infoModal) {
-            infoModal.style.display = 'none';
+            const closeModalBtn = infoModal.querySelector('.close-button');
+            if (closeModalBtn) closeModalBtn.click();
         }
     });
 
     carregarDados();
 });
-
-
-
-
